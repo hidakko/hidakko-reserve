@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Reservations: read requires reservationId + phone check via API (not direct from client)
+    match /reservations/{id} {
+      allow read, write: if false;
+    }
+
+    // Seats: managed via API (admin only)
+    match /seats/{date}/slots/{slotId} {
+      allow read, write: if false;
+    }
+  }
+}

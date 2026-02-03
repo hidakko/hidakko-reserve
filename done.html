@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>送信完了 | ひだっこcafe</title>
+  <link rel="stylesheet" href="./style.css?v=20260130" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html">ひだっこcafe 予約</a>
+  </header>
+
+  <main class="container">
+    <h1>送信完了</h1>
+
+    <section class="card">
+      <p>仮予約を受け付けました。</p>
+      <p>予約番号：<strong id="code"></strong></p>
+
+      <p class="muted">
+        承認されると「確定通知」が届きます（LINEからの予約の場合はLINEへ通知します）。<br>
+        内容の変更は<strong>2日前まで</strong>可能です。
+      </p>
+
+      <div class="actions">
+        <a class="btn" id="manageLink" href="./manage.html">予約の確認・変更へ</a>
+        <a class="btn" href="./index.html">トップへ戻る</a>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const code = params.get("code") || ""; // 新方式
+    const id = params.get("id") || "";     // 旧互換（念のため）
+
+    document.getElementById("code").textContent = code || id;
+
+    const link = document.getElementById("manageLink");
+    if (code) link.href = `./manage.html#code=${encodeURIComponent(code)}`;
+    else if (id) link.href = `./manage.html#id=${encodeURIComponent(id)}`;
+  </script>
+</body>
+</html>

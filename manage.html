@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>予約の確認・変更 | ひだっこcafe</title>
+
+  <link rel="stylesheet" href="./style.css?v=20260129" />
+
+  <!-- flatpickr（カレンダーUI） -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <style>
+    .flatpickr-calendar{ border-radius:16px; box-shadow: 0 12px 30px rgba(0,0,0,.15); }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html">ひだっこcafe 予約</a>
+  </header>
+
+  <main class="container">
+    <h1>予約の確認・変更</h1>
+
+    <section class="card">
+      <h2 style="margin-top:0;">予約を開く</h2>
+
+      <div class="row">
+        <label>予約番号</label>
+        <input id="rid" type="text" placeholder="例：123456（6桁）" />
+      </div>
+
+      <div class="row">
+        <label>電話番号</label>
+        <input id="phone" type="tel" placeholder="予約時の電話番号（ハイフン可）" />
+      </div>
+
+      <div class="actions">
+        <button id="lookup" class="primary" type="button">確認</button>
+      </div>
+
+      <p class="muted">※ キャンセルはお電話でお願いします。</p>
+    </section>
+
+    <section id="detail" class="card" style="display:none;">
+      <h2 style="margin-top:0;">予約内容</h2>
+
+      <div id="statusBox" class="notice"></div>
+
+      <div class="row">
+        <label for="date">日付</label>
+        <input id="date" type="text" placeholder="日付を選択" />
+      </div>
+
+      <div class="row">
+        <label>席の希望</label>
+        <select id="seatPref">
+          <option value="either">どちらでも</option>
+          <option value="counter">カウンターのみ</option>
+          <option value="table">テーブル希望</option>
+          <option value="zashiki">座敷希望</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label>時間</label>
+        <select id="time"></select>
+        <small id="timeHelp" class="muted"></small>
+      </div>
+
+      <div class="row">
+        <label>人数</label>
+        <input id="people" type="number" min="1" max="20" />
+      </div>
+
+      <div class="row">
+        <label>備考</label>
+        <textarea id="note" rows="3"></textarea>
+      </div>
+
+      <div class="actions">
+        <button id="update" class="primary" type="button">変更を送信（再承認）</button>
+        <a class="btn" href="./index.html">トップへ戻る</a>
+      </div>
+
+      <p class="muted">
+        ※ 変更は<strong>2日前まで</strong>可能です。<br>
+        ※ 土日は休みのため予約できません。<br>
+        ※ キャンセルはお電話でお願いします。
+      </p>
+    </section>
+  </main>
+
+  <script src="./app.js?v=20260129"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+  <script>
+    const $rid = document.getElementById("rid");
+    const $phone = document.getElementById("phone");
+    const $lookup = document.getElementById("lookup");
+
+    const $detail = document.getElementById("detail");
+    const $statusBox = document.getElementById("statusBox");
+    const $date = document.getElementById("date");
+    const $seatPref = document.getElementById("seatPref");
+    const $time = document.getElementById("time");
+    const $timeHelp = document.getElementById("timeHelp");
+    const $people = document.getElementById("people");
+    const $note = document.getElementById("note");
+    const $update = document.getElementById("update");
+
+    let currentReservation = null;
+    let availability = null;
+    let fp = null; // flatpickr instance
+    let deadlineLocked = false;
+
+    function normalizePhone(s) {
+      return String(s || "").replace(/[^\d]/g, "");
+    }
+    function jstTodayYmd() {
+      const nowJst = new Date(Date.now() + 9*60*60*1000);
+      return nowJst.toISOString().slice(0,10);
+    }
+    function daysDiff(fromYmd, toYmd) {
+      const a = new Date(fromYmd + "T00:00:00Z");
+      const b = new Date(toYmd + "T00:00:00Z");
+      return Math.floor((b - a) / (24*60*60*1000));
+    }
+    function canChange(ymd) {
+      return daysDiff(jstTodayYmd(), ymd) >= 2;
+    }
+
+    function isWeekendDateObj(d) {
+      const w = d.getDay(); // 0 Sun, 6 Sat
+      return w === 0 || w === 6;
+    }
+    function isWeekendYmd(ymd) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(ymd || ""))) return false;
+      const [y,m,d] = ymd.split("-").map(Number);
+      const day = new Date(Date.UTC(y, m-1, d)).getUTCDay();
+      return day === 0 || day === 6;
+    }
+    function nextWeekdayYmd(ymd) {
+      const [y,m,d] = ymd.split("-").map(Number);
+      let t = Date.UTC(y, m-1, d);
+      while (true) {
+        const day = new Date(t).getUTCDay();
+        if (day !== 0 && day !== 6) break;
+        t += 24*60*60*1000;
+      }
+      return new Date(t).toISOString().slice(0,10);
+    }
+
+    function setEditable(enabled) {
+      $date.disabled = !enabled;
+      $seatPref.disabled = !enabled;
+      $time.disabled = !enabled;
+      $people.disabled = !enabled;
+      $note.disabled = !enabled;
+      $update.disabled = !enabled;
+      if (!enabled) $update.title = "変更は2日前まで可能です";
+      else $update.title = "";
+    }
+
+    function statusText(r) {
+      const s = r.status;
+      if (s === "pending") return "状態：承認待ち（仮予約）";
+      if (s === "confirmed") {
+        const seat =
+          r.seatType === "zashiki" ? "座敷" :
+          (r.seatType === "counter" ? "カウンター" :
+          (r.seatType === "table2" ? "テーブル（2人）" :
+          (r.seatType === "tableLarge" ? "テーブル（3〜6）" : "未確定")));
+        return `状態：確定（席：${seat}）`;
+      }
+      if (s === "rejected") return "状態：お断り";
+      if (s === "canceled") return "状態：キャンセル";
+      return `状態：${s}`;
+    }
+
+    // ====== 席の可否判定（数字は出さず「予約可/満席」）======
+    function canZashiki(sl) {
+      const z = sl.zashikiEnabled ? Number(sl.zashikiRemain || 0) : 0;
+      return !!sl.zashikiEnabled && z > 0;
+    }
+    function canCounter(sl) {
+      return Number(sl.counterRemain || 0) > 0;
+    }
+    function canTable(people, sl) {
+      const p = Number(people || 1);
+      const t2 = Number(sl.table2Remain || 0);
+      const tl = Number(sl.tableLargeRemain || 0);
+      const z = sl.zashikiEnabled ? Number(sl.zashikiRemain || 0) : 0;
+
+      if (p <= 2) return (t2 > 0) || (tl > 0);
+      if (p <= 6) return (tl > 0);
+      return !!sl.zashikiEnabled && z > 0; // 7+ は座敷へ
+    }
+    function canEither(people, sl) {
+      const p = Number(people || 1);
+
+      const can = {
+        counter: canCounter(sl),
+        table2: Number(sl.table2Remain || 0) > 0,
+        tableLarge: Number(sl.tableLargeRemain || 0) > 0,
+        zashiki: canZashiki(sl),
+      };
+
+      const order =
+        p <= 2 ? ["table2","counter","tableLarge","zashiki"]
+        : p <= 6 ? ["tableLarge","zashiki","counter","table2"]
+        : ["zashiki","tableLarge","counter","table2"];
+
+      for (const t of order) {
+        if (t === "zashiki" && !sl.zashikiEnabled) continue;
+        if (can[t]) return true;
+      }
+      return false;
+    }
+
+    function isCurrentSlot(sl) {
+      return !!currentReservation
+        && $date.value === currentReservation.date
+        && sl.time === currentReservation.time;
+    }
+
+    function slotDisabled(sl) {
+      // 「現在の予約枠」は満席表示でも選べるようにする（メモだけ変更したい時に詰まないため）
+      if (isCurrentSlot(sl)) return false;
+
+      const pref = $seatPref.value;
+      const p = Number($people.value || 1);
+
+      if (pref === "counter") return !canCounter(sl);
+      if (pref === "zashiki") return !canZashiki(sl);
+      if (pref === "table")   return !canTable(p, sl);
+      return !canEither(p, sl);
+    }
+
+    function slotLabel(sl) {
+      const pref = $seatPref.value;
+      const p = Number($people.value || 1);
+
+      let ok = false;
+      if (isCurrentSlot(sl)) ok = true;
+      else if (pref === "counter") ok = canCounter(sl);
+      else if (pref === "zashiki") ok = canZashiki(sl);
+      else if (pref === "table") ok = canTable(p, sl);
+      else ok = canEither(p, sl);
+
+      if (pref === "zashiki" && !sl.zashikiEnabled) return `${sl.time}（座敷：受付停止）`;
+      if (isCurrentSlot(sl)) return `${sl.time}（現在の予約）`;
+      return `${sl.time}（${ok ? "予約可" : "満席"}）`;
+    }
+
+    function renderTimes() {
+      $time.innerHTML = "";
+
+      if (!availability) {
+        const opt = document.createElement("option");
+        opt.textContent = "読み込み中…";
+        $time.appendChild(opt);
+        return;
+      }
+
+      if (availability.closed) {
+        $timeHelp.textContent = availability.reason || "休業日のため予約できません。";
+        $update.disabled = true;
+        $time.disabled = true;
+        return;
+      }
+
+      $time.disabled = false;
+
+      let enabledCount = 0;
+      const slots = availability.slots || [];
+      for (const sl of slots) {
+        const opt = document.createElement("option");
+        opt.value = sl.time;
+        opt.textContent = slotLabel(sl);
+        opt.disabled = slotDisabled(sl);
+        if (!opt.disabled) enabledCount++;
+        $time.appendChild(opt);
+      }
+
+      if (enabledCount === 0) {
+        $timeHelp.textContent = "この条件では満席です。日付・人数・席希望を変えてください。";
+        $update.disabled = true;
+      } else {
+        $timeHelp.textContent = "";
+
+        // 締切ロック中は常に更新不可
+        $update.disabled = deadlineLocked;
+
+        // 既存の予約時刻を優先
+        const cur = currentReservation?.time;
+        if (cur) {
+          const curOpt = [...$time.options].find(o => o.value === cur);
+          if (curOpt) $time.value = cur;
+        }
+
+        // 選択中の値が無効なら最初の有効枠へ
+        const curOpt2 = [...$time.options].find(o => o.value === $time.value);
+        if (!curOpt2 || curOpt2.disabled) {
+          const firstEnabled = [...$time.options].find(o => !o.disabled);
+          if (firstEnabled) $time.value = firstEnabled.value;
+        }
+      }
+    }
+
+    async function loadAvailability() {
+      const ymd = $date.value;
+
+      if (isWeekendYmd(ymd)) {
+        alert("土日は休みです。平日を選んでください。");
+        const fixed = nextWeekdayYmd(ymd);
+        if (fp) fp.setDate(fixed, true);
+        else $date.value = fixed;
+        return;
+      }
+
+      $timeHelp.textContent = "読み込み中…";
+      $update.disabled = true;
+      availability = null;
+      renderTimes();
+
+      try {
+        availability = await Hidakko.api(`/availability?date=${encodeURIComponent($date.value)}`);
+        renderTimes();
+      } catch (e) {
+        console.error(e);
+        availability = null;
+        $timeHelp.textContent = "空席状況の取得に失敗しました。";
+        $update.disabled = true;
+        renderTimes();
+      }
+    }
+
+    function buildLookupBody() {
+      const raw = ($rid.value || "").trim();
+      const phone = normalizePhone($phone.value);
+
+      // 数字4〜6桁は「予約番号（code）」として扱う。それ以外は「旧ID」として扱う。
+      const isCode = /^\d{4,6}$/.test(raw);
+
+      if (isCode) return { code: raw, phone };
+      return { id: raw, phone };
+    }
+
+    async function lookup() {
+      $lookup.disabled = true;
+      $lookup.textContent = "読み込み中…";
+
+      try {
+        const bodyObj = buildLookupBody();
+        if ((!bodyObj.code && !bodyObj.id) || !bodyObj.phone) {
+          alert("予約番号と電話番号を入力してください。");
+          return;
+        }
+
+        const r = await Hidakko.api("/reservations/lookup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bodyObj)
+        });
+
+        currentReservation = r;
+        $detail.style.display = "";
+        $statusBox.textContent = statusText(r);
+
+        // 値反映
+        if (fp) fp.setDate(r.date, false);
+        $date.value = r.date;
+
+        $seatPref.value = r.seatPref || "either";
+        $people.value = r.people || 2;
+        $note.value = r.note || "";
+
+        // 変更期限（2日前）判定：元の予約日基準
+        deadlineLocked = !canChange(r.date);
+        if (deadlineLocked) {
+          $statusBox.textContent += " / ※ 変更期限（2日前）を過ぎています。";
+          setEditable(false);
+        } else {
+          setEditable(true);
+        }
+
+        await loadAvailability();
+
+        // 時刻の既定値（予約時刻を優先）
+        if (r.time) $time.value = r.time;
+        renderTimes();
+
+      } catch (e) {
+        console.error(e);
+        alert(e.message || "見つかりませんでした");
+      } finally {
+        $lookup.disabled = false;
+        $lookup.textContent = "確認";
+      }
+    }
+
+    $lookup.addEventListener("click", lookup);
+    $seatPref.addEventListener("change", renderTimes);
+    $people.addEventListener("input", renderTimes);
+    $people.addEventListener("change", renderTimes);
+
+    $update.addEventListener("click", async () => {
+      if (!currentReservation) return;
+
+      if (deadlineLocked) {
+        alert("変更期限（2日前）を過ぎています。キャンセルはお電話でお願いします。");
+        return;
+      }
+      if (isWeekendYmd($date.value)) {
+        alert("土日は休みです。平日を選んでください。");
+        return;
+      }
+
+      $update.disabled = true;
+      $update.textContent = "送信中…";
+
+      try {
+        await Hidakko.api(`/reservations/${encodeURIComponent(currentReservation.id)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone: normalizePhone($phone.value),
+            date: $date.value,
+            time: $time.value,
+            people: Number($people.value || 1),
+            seatPref: $seatPref.value,
+            note: $note.value
+          })
+        });
+
+        alert("変更を受け付けました。再承認となります。");
+        await lookup();
+      } catch (e) {
+        console.error(e);
+        alert(e.message || "変更に失敗しました");
+      } finally {
+        $update.textContent = "変更を送信（再承認）";
+        $update.disabled = deadlineLocked;
+      }
+    });
+
+    // ====== flatpickr 初期化（土日無効）======
+    (function initDatePicker(){
+      const today = jstTodayYmd();
+      const initial = isWeekendYmd(today) ? nextWeekdayYmd(today) : today;
+
+      fp = flatpickr($date, {
+        dateFormat: "Y-m-d",
+        defaultDate: initial,
+        minDate: "today",
+        disable: [ function(date){ return isWeekendDateObj(date); } ],
+        onChange: function() {
+          if ($detail.style.display === "none") return; // 予約を開く前は何もしない
+          loadAvailability();
+        }
+      });
+    })();
+
+    // done.html から #code= で飛んでくる場合（旧 #id= も救う）
+    (function initHash(){
+      const hash = location.hash || "";
+      if (hash.startsWith("#code=")) {
+        $rid.value = decodeURIComponent(hash.slice(6));
+      } else if (hash.startsWith("#id=")) {
+        $rid.value = decodeURIComponent(hash.slice(4));
+      }
+    })();
+  </script>
+</body>
+</html>

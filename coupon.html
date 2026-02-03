@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>クーポン | ひだっこcafe</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html">ひだっこcafe 予約</a>
+  </header>
+
+  <main class="container">
+    <h1>クーポン</h1>
+
+    <section class="card">
+      <h2 id="title" style="margin-top:0;"></h2>
+      <p id="body" style="white-space:pre-wrap;"></p>
+      <p class="muted" id="until"></p>
+      <p class="muted">※ この画面を店員に見せてください。</p>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+  <script>
+    async function load() {
+      try {
+        const c = await Hidakko.api("/coupon");
+        document.getElementById("title").textContent = c.title || "現在クーポンはありません";
+        document.getElementById("body").textContent = c.body || "";
+        document.getElementById("until").textContent = c.validUntil ? `期限：${c.validUntil}` : "";
+      } catch (e) {
+        console.error(e);
+        document.getElementById("title").textContent = "読み込みに失敗しました";
+      }
+    }
+    load();
+  </script>
+</body>
+</html>

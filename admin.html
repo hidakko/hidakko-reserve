@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>店側管理 | ひだっこcafe</title>
+
+  <link rel="stylesheet" href="./style.css?v=20260129_03" />
+
+  <style>
+    #dateRow{ cursor:pointer; }
+    #dateRow label{ white-space:nowrap; }
+    #dateRow input[type="date"]{ min-width:0; max-width:100%; cursor:pointer; }
+
+    .seatgrid{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      align-items:flex-start;
+      width:100%;
+    }
+    .seatitem{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex: 1 1 260px;
+      min-width: 240px;
+    }
+    .seatitem .label{ min-width: 160px; white-space: nowrap; }
+    .seatitem input[type="number"]{ width: 110px; }
+
+    .seatactions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      align-items:center;
+      justify-content:flex-end;
+      margin-left:auto;
+    }
+
+    .slot-head{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px 14px;
+      align-items:flex-start;
+      justify-content:space-between;
+    }
+    .seatSummary{ display:grid; gap:6px; }
+    .seatRow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .seatTag{
+      font-size:12px;
+      font-weight:900;
+      padding:5px 12px;
+      border-radius:999px;
+      color:#fff;
+      background:#111827;
+      letter-spacing:.02em;
+    }
+    .seatTag.reserved{ background:#ef4444; }
+    .seatChip{
+      font-size:13px;
+      padding:7px 12px;
+      border:1px solid var(--border, #e5e7eb);
+      border-radius:999px;
+      background:#fff;
+      white-space:nowrap;
+    }
+    .seatChip b{ font-size:14px; font-weight:900; }
+
+    @media (max-width: 520px){
+      .seatitem{
+        flex: 1 1 100%;
+        min-width: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+      }
+      .seatitem .label{ min-width: 0; }
+      .seatitem input[type="number"]{ width: 100%; }
+      .seatactions{ width:100%; justify-content:flex-start; }
+      .seatRow{ justify-content:flex-start; }
+    }
+
+    /* “今日はログイン済み”の表示 */
+    .loginHint{
+      margin-top:10px;
+      font-size:13px;
+      color:#6b7280;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html">ひだっこcafe 予約（店側）</a>
+  </header>
+
+  <div id="loginView" class="container">
+    <h1>店側管理ログイン</h1>
+
+    <section class="card">
+      <div class="row">
+        <label for="pin">管理PIN</label>
+        <input id="pin" type="password" inputmode="numeric" placeholder="4桁など" autocomplete="current-password" />
+      </div>
+
+      <div class="actions">
+        <button id="loginBtn" class="primary" type="button">ログイン</button>
+        <button id="clearSavedBtn" type="button">保存PINを消す</button>
+      </div>
+
+      <p id="loginErr" style="margin-top:10px;color:red;"></p>
+      <p id="loginHint" class="loginHint"></p>
+    </section>
+  </div>
+
+  <div id="adminView" hidden>
+    <main class="container">
+      <div class="actions" style="justify-content:flex-end;">
+        <button id="logoutBtn" type="button">ログアウト</button>
+      </div>
+
+      <h1>店側管理</h1>
+
+      <section class="card">
+        <div class="row" id="dateRow">
+          <label for="date">日付</label>
+          <input id="date" type="date" lang="ja" />
+        </div>
+
+        <p class="muted" style="margin-top:10px;">
+          ・承認すると自動で席（カウンター/テーブル/座敷）が割り当てられ、空席数が減ります。<br>
+          ・座敷を停止したい枠は「座敷受付」をOFFにしてください。<br>
+          ・「テーブル希望」は人数で自動判定（2人＝2人テーブル優先、3〜6人＝大テーブル優先）します。<br>
+          ・予約枠は 11:30〜13:30 のみです。<br>
+          ・土日は休み（選んでも次の平日に自動補正）です。
+        </p>
+      </section>
+
+      <section class="card">
+        <h2 style="margin-top:0;">承認待ち（仮予約）</h2>
+        <div id="pending"></div>
+      </section>
+
+      <section class="card">
+        <h2 style="margin-top:0;">席数の設定</h2>
+
+        <div class="row">
+          <label>一括設定（この日の全枠）</label>
+          <div class="seatgrid">
+            <div class="seatitem">
+              <span class="muted label">カウンター（上限4）</span>
+              <input id="bulkCounter" type="number" inputmode="numeric" value="4" />
+            </div>
+
+            <div class="seatitem">
+              <span class="muted label">テーブル2人（上限1）</span>
+              <input id="bulkTable2" type="number" inputmode="numeric" value="1" />
+            </div>
+
+            <div class="seatitem">
+              <span class="muted label">テーブル3〜6（上限3）</span>
+              <input id="bulkTableLarge" type="number" inputmode="numeric" value="3" />
+            </div>
+
+            <div class="seatitem">
+              <span class="muted label">座敷（上限1）</span>
+              <input id="bulkZashiki" type="number" inputmode="numeric" value="1" />
+            </div>
+
+            <div class="seatactions">
+              <label style="display:flex;align-items:center;gap:8px;">
+                <input id="bulkZEnabled" type="checkbox" checked />
+                <span style="white-space:nowrap;">座敷受付</span>
+              </label>
+              <button id="bulkSave" class="primary" type="button">一括保存</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="seats"></div>
+      </section>
+
+      <section class="card">
+        <h2 style="margin-top:0;">クーポン</h2>
+
+        <div class="row">
+          <label for="cTitle">タイトル</label>
+          <input id="cTitle" type="text" placeholder="例：訳ありアスパラ無料" />
+        </div>
+        <div class="row">
+          <label for="cBody">本文</label>
+          <textarea id="cBody" rows="2" placeholder="例：この画面を提示で、訳ありアスパラ無料"></textarea>
+        </div>
+        <div class="row">
+          <label for="cUntil">期限（表示用）</label>
+          <input id="cUntil" type="text" placeholder="例：2026-02-29 まで" />
+        </div>
+
+        <div class="actions">
+          <button id="cSave" class="primary" type="button">クーポン保存</button>
+        </div>
+
+        <p class="muted">※ リッチメニューのリンク先を <code>/coupon.html</code> にすればOKです。</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="./app.js?v=20260129_03"></script>
+
+  <script>
+    const MAX = { counter: 4, table2: 1, tableLarge: 3, zashiki: 1 };
+    const IS_MOBILE = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+
+    function clampInput(el, max) {
+      const v = parseInt(el.value, 10);
+      if (!Number.isFinite(v)) { el.value = "0"; return; }
+      el.value = String(Math.max(0, Math.min(max, v)));
+    }
+    function bindClamp(el, max) {
+      if (!el) return;
+      el.setAttribute("max", String(max));
+      el.setAttribute("min", "0");
+      el.setAttribute("step", "1");
+      el.addEventListener("input", () => clampInput(el, max));
+      el.addEventListener("change", () => clampInput(el, max));
+    }
+    function postJson(bodyObj) {
+      return {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyObj)
+      };
+    }
+    function jstTodayYmd() {
+      const nowJst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+      return nowJst.toISOString().slice(0, 10);
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[c]));
+    }
+    function seatPrefLabel(p) {
+      if (p === "counter") return "カウンター希望";
+      if (p === "zashiki") return "座敷希望";
+      if (p === "table")   return "テーブル希望";
+      return "どちらでも";
+    }
+
+    // ===== 土日チェック =====
+    function isWeekendYmd(ymd) {
+      if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return false;
+      const [y, m, d] = ymd.split("-").map(n => parseInt(n, 10));
+      const day = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+      return day === 0 || day === 6;
+    }
+    function addDaysYmd(ymd, addDays) {
+      const [y, m, d] = ymd.split("-").map(n => parseInt(n, 10));
+      const dt = new Date(Date.UTC(y, m - 1, d));
+      dt.setUTCDate(dt.getUTCDate() + addDays);
+      return dt.toISOString().slice(0, 10);
+    }
+    function nextBusinessDayYmd(ymd) {
+      let cur = ymd;
+      while (isWeekendYmd(cur)) cur = addDaysYmd(cur, 1);
+      return cur;
+    }
+
+    // ===== “当日だけログイン保持” =====
+    const PIN_STORE_KEY = "hidakko_admin_pin";
+    const PIN_STORE_DATE_KEY = "hidakko_admin_pin_date";
+
+    function savePinForToday(pin) {
+      localStorage.setItem(PIN_STORE_KEY, String(pin || ""));
+      localStorage.setItem(PIN_STORE_DATE_KEY, jstTodayYmd());
+    }
+    function loadPinIfToday() {
+      const d = localStorage.getItem(PIN_STORE_DATE_KEY) || "";
+      if (d === jstTodayYmd()) return localStorage.getItem(PIN_STORE_KEY) || "";
+      clearSavedPin();
+      return "";
+    }
+    function clearSavedPin() {
+      localStorage.removeItem(PIN_STORE_KEY);
+      localStorage.removeItem(PIN_STORE_DATE_KEY);
+    }
+
+    // ========= DOM =========
+    const $loginView = document.getElementById("loginView");
+    const $adminView = document.getElementById("adminView");
+    const $loginBtn  = document.getElementById("loginBtn");
+    const $loginErr  = document.getElementById("loginErr");
+    const $loginHint = document.getElementById("loginHint");
+    const $clearSavedBtn = document.getElementById("clearSavedBtn");
+    const $logoutBtn = document.getElementById("logoutBtn");
+
+    const $pin  = document.getElementById("pin");
+    const $date = document.getElementById("date");
+    const $dateRow = document.getElementById("dateRow");
+
+    const $pending = document.getElementById("pending");
+    const $seats   = document.getElementById("seats");
+
+    const $bulkCounter    = document.getElementById("bulkCounter");
+    const $bulkTable2     = document.getElementById("bulkTable2");
+    const $bulkTableLarge = document.getElementById("bulkTableLarge");
+    const $bulkZashiki    = document.getElementById("bulkZashiki");
+    const $bulkZEnabled   = document.getElementById("bulkZEnabled");
+    const $bulkSave       = document.getElementById("bulkSave");
+
+    const $cTitle = document.getElementById("cTitle");
+    const $cBody  = document.getElementById("cBody");
+    const $cUntil = document.getElementById("cUntil");
+    const $cSave  = document.getElementById("cSave");
+
+    bindClamp($bulkCounter, MAX.counter);
+    bindClamp($bulkTable2, MAX.table2);
+    bindClamp($bulkTableLarge, MAX.tableLarge);
+    bindClamp($bulkZashiki, MAX.zashiki);
+
+    function showLogin() {
+      $loginErr.textContent = "";
+      $loginView.hidden = false;
+      $adminView.hidden = true;
+
+      const saved = loadPinIfToday();
+      if (saved) {
+        $loginHint.textContent = "今日はPINが保存されています（この端末のみ）。自動ログインします。";
+      } else {
+        $loginHint.textContent = "PINはこの端末に「当日だけ」保存できます。共有PCでは使わないでください。";
+      }
+    }
+    function showAdmin() {
+      $loginView.hidden = true;
+      $adminView.hidden = false;
+    }
+
+    (function initDate() {
+      const today = jstTodayYmd();
+      $date.min = today;
+      $date.value = nextBusinessDayYmd(today);
+    })();
+
+    $dateRow.addEventListener("click", (e) => {
+      if (e.target !== $date) $date.focus({ preventScroll: true });
+      if (!IS_MOBILE && typeof $date.showPicker === "function") {
+        try { $date.showPicker(); } catch (_) {}
+      }
+    });
+
+    async function tryLogin(pinOverride) {
+      const pin = (pinOverride ?? $pin.value).trim();
+      if (!pin) { $loginErr.textContent = "PINを入力してください。"; return; }
+      if (!window.Hidakko || typeof Hidakko.api !== "function") {
+        $loginErr.textContent = "app.js が読み込めていません（Hidakko.api が未定義）。";
+        return;
+      }
+
+      $loginBtn.disabled = true;
+      $loginBtn.textContent = "確認中…";
+      $loginErr.textContent = "";
+
+      try {
+        await Hidakko.api(`/admin/pending?date=${encodeURIComponent($date.value)}`, postJson({ pin }));
+        savePinForToday(pin);     // ★成功したら今日だけ保存
+        $pin.value = pin;         // ★入力欄にも反映
+        showAdmin();
+        await reload();
+      } catch (e) {
+        console.error(e);
+        clearSavedPin();          // ★失敗したら保存を消す
+        $loginErr.textContent = "PINが違うか、接続に失敗しました。";
+        showLogin();
+      } finally {
+        $loginBtn.disabled = false;
+        $loginBtn.textContent = "ログイン";
+      }
+    }
+
+    $loginBtn.addEventListener("click", () => tryLogin());
+    $pin.addEventListener("keydown", (e) => { if (e.key === "Enter") tryLogin(); });
+
+    $clearSavedBtn.addEventListener("click", () => {
+      clearSavedPin();
+      $pin.value = "";
+      alert("保存PINを消しました。");
+      showLogin();
+    });
+
+    $logoutBtn.addEventListener("click", () => {
+      // “ログアウト”＝保存も消す（端末に残さない）
+      clearSavedPin();
+      $pin.value = "";
+      showLogin();
+    });
+
+    function renderPending(list) {
+      if (!list || !list.length) {
+        $pending.innerHTML = "<p class='muted'>承認待ちはありません。</p>";
+        return;
+      }
+
+      $pending.innerHTML = list.map(r => `
+        <div class="slot">
+          <div>
+            <div class="slot-time">${r.time} / ${escapeHtml(r.name)}（${r.people}名）</div>
+            <div class="muted">希望：${seatPrefLabel(r.seatPref)} / 電話：${escapeHtml(r.phone)}</div>
+            ${r.note ? `<div class="muted">備考：${escapeHtml(r.note)}</div>` : ``}
+
+            <div class="row" style="margin:10px 0 0;">
+              <label>お断り理由（任意）</label>
+              <input data-reason="${r.id}" type="text" placeholder="例：満席のため" />
+            </div>
+
+            <div class="actions">
+              <button class="primary" type="button" data-approve="${r.id}">承認する</button>
+              <button type="button" data-reject="${r.id}">お断りする</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+
+      document.querySelectorAll("[data-approve]").forEach(btn =>
+        btn.addEventListener("click", () => approve(btn.dataset.approve))
+      );
+      document.querySelectorAll("[data-reject]").forEach(btn =>
+        btn.addEventListener("click", () => reject(btn.dataset.reject))
+      );
+    }
+
+    async function approve(id) {
+      if (!confirm("承認します。よろしいですか？")) return;
+      await Hidakko.api(`/admin/reservations/${encodeURIComponent(id)}/approve`, postJson({ pin: $pin.value }));
+      await reload();
+    }
+
+    async function reject(id) {
+      if (!confirm("お断りにします。よろしいですか？")) return;
+      const reasonInput = document.querySelector(`[data-reason="${id}"]`);
+      const reason = reasonInput ? reasonInput.value : "";
+      await Hidakko.api(`/admin/reservations/${encodeURIComponent(id)}/reject`, postJson({ pin: $pin.value, reason }));
+      await reload();
+    }
+
+    function n(v, fallback=0) {
+      const x = Number(v);
+      return Number.isFinite(x) ? x : fallback;
+    }
+
+    function renderSeats(slots) {
+      $seats.innerHTML = (slots || []).map(sl => {
+        const zEnabled = !!sl.zashikiEnabled;
+
+        const counterTotal = n(sl.counterTotal);
+        const table2Total = n(sl.table2Total);
+        const tableLargeTotal = n(sl.tableLargeTotal);
+        const zashikiTotal = n(sl.zashikiTotal);
+
+        const counterReserved = n(sl.counterReserved);
+        const table2Reserved = n(sl.table2Reserved);
+        const tableLargeReserved = n(sl.tableLargeReserved);
+        const zashikiReserved = n(sl.zashikiReserved);
+
+        return `
+          <div class="slot">
+            <div style="flex:1;">
+              <div class="slot-head">
+                <div>
+                  <div class="slot-time">${sl.time}</div>
+                  <div class="muted">座敷：${zEnabled ? "受付中" : "停止"}</div>
+                </div>
+
+                <div class="seatSummary">
+                  <div class="seatRow">
+                    <span class="seatTag reserved">予約数</span>
+                    <span class="seatChip">カ <b>${counterReserved}</b></span>
+                    <span class="seatChip">T2 <b>${table2Reserved}</b></span>
+                    <span class="seatChip">T3-6 <b>${tableLargeReserved}</b></span>
+                    <span class="seatChip">座 <b>${zashikiReserved}</b></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="seatgrid" style="margin-top:10px;">
+                <div class="seatitem">
+                  <span class="muted label">カウンター（上限4）</span>
+                  <input data-ct="${sl.time}" type="number" inputmode="numeric" value="${counterTotal}" />
+                </div>
+
+                <div class="seatitem">
+                  <span class="muted label">テーブル2人（上限1）</span>
+                  <input data-t2="${sl.time}" type="number" inputmode="numeric" value="${table2Total}" />
+                </div>
+
+                <div class="seatitem">
+                  <span class="muted label">テーブル3〜6（上限3）</span>
+                  <input data-tl="${sl.time}" type="number" inputmode="numeric" value="${tableLargeTotal}" />
+                </div>
+
+                <div class="seatitem">
+                  <span class="muted label">座敷（上限1）</span>
+                  <input data-zt="${sl.time}" type="number" inputmode="numeric" value="${zashikiTotal}" />
+                </div>
+
+                <div class="seatactions">
+                  <label style="display:flex;align-items:center;gap:8px;">
+                    <input data-ze="${sl.time}" type="checkbox" ${zEnabled ? "checked" : ""} />
+                    <span style="white-space:nowrap;">座敷受付</span>
+                  </label>
+                  <button class="primary" type="button" data-save="${sl.time}">保存</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      document.querySelectorAll("[data-ct]").forEach(el => bindClamp(el, MAX.counter));
+      document.querySelectorAll("[data-t2]").forEach(el => bindClamp(el, MAX.table2));
+      document.querySelectorAll("[data-tl]").forEach(el => bindClamp(el, MAX.tableLarge));
+      document.querySelectorAll("[data-zt]").forEach(el => bindClamp(el, MAX.zashiki));
+
+      document.querySelectorAll("[data-save]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const time = btn.dataset.save;
+
+          const $ct = document.querySelector(`[data-ct="${time}"]`);
+          const $t2 = document.querySelector(`[data-t2="${time}"]`);
+          const $tl = document.querySelector(`[data-tl="${time}"]`);
+          const $zt = document.querySelector(`[data-zt="${time}"]`);
+          const $ze = document.querySelector(`[data-ze="${time}"]`);
+
+          clampInput($ct, MAX.counter);
+          clampInput($t2, MAX.table2);
+          clampInput($tl, MAX.tableLarge);
+          clampInput($zt, MAX.zashiki);
+
+          await Hidakko.api(`/admin/seats/update?date=${encodeURIComponent($date.value)}`,
+            postJson({
+              pin: $pin.value,
+              time,
+              counterTotal: Number($ct.value),
+              table2Total: Number($t2.value),
+              tableLargeTotal: Number($tl.value),
+              zashikiTotal: Number($zt.value),
+              zashikiEnabled: $ze.checked
+            })
+          );
+
+          await loadSeats();
+        });
+      });
+    }
+
+    async function loadPending() {
+      const data = await Hidakko.api(`/admin/pending?date=${encodeURIComponent($date.value)}`, postJson({ pin: $pin.value }));
+      renderPending(data.list || []);
+    }
+    async function loadSeats() {
+      const data = await Hidakko.api(`/admin/seats?date=${encodeURIComponent($date.value)}`, postJson({ pin: $pin.value }));
+      renderSeats(data.slots || []);
+    }
+    async function loadCoupon() {
+      const c = await Hidakko.api("/coupon");
+      $cTitle.value = c.title || "";
+      $cBody.value = c.body || "";
+      $cUntil.value = c.validUntil || "";
+    }
+
+    async function reload() {
+      try {
+        await Promise.all([loadPending(), loadSeats(), loadCoupon()]);
+      } catch (e) {
+        console.error(e);
+        alert(e.message || "取得に失敗しました");
+      }
+    }
+
+    let dateTimer;
+    $date.addEventListener("change", () => {
+      if ($adminView.hidden) return;
+
+      if (isWeekendYmd($date.value)) {
+        const fixed = nextBusinessDayYmd(addDaysYmd($date.value, 1));
+        alert("土日は休みです。次の営業日に変更しました。");
+        $date.value = fixed;
+      }
+
+      clearTimeout(dateTimer);
+      dateTimer = setTimeout(() => reload(), 120);
+    });
+
+    $bulkSave.addEventListener("click", async () => {
+      if (!confirm("この日の全枠に一括設定します。よろしいですか？")) return;
+
+      clampInput($bulkCounter, MAX.counter);
+      clampInput($bulkTable2, MAX.table2);
+      clampInput($bulkTableLarge, MAX.tableLarge);
+      clampInput($bulkZashiki, MAX.zashiki);
+
+      await Hidakko.api(`/admin/seats/bulk?date=${encodeURIComponent($date.value)}`,
+        postJson({
+          pin: $pin.value,
+          counterTotal: Number($bulkCounter.value),
+          table2Total: Number($bulkTable2.value),
+          tableLargeTotal: Number($bulkTableLarge.value),
+          zashikiTotal: Number($bulkZashiki.value),
+          zashikiEnabled: $bulkZEnabled.checked
+        })
+      );
+
+      await loadSeats();
+    });
+
+    $cSave.addEventListener("click", async () => {
+      await Hidakko.api("/admin/coupon",
+        postJson({
+          pin: $pin.value,
+          title: $cTitle.value,
+          body: $cBody.value,
+          validUntil: $cUntil.value
+        })
+      );
+      alert("保存しました。");
+    });
+
+    // init
+    showLogin();
+
+    // ★今日のPINが保存されていれば自動ログイン
+    (function autoLogin(){
+      const saved = loadPinIfToday();
+      if (saved) {
+        $pin.value = saved;
+        tryLogin(saved);
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>予約する | ひだっこcafe</title>
+
+  <link rel="stylesheet" href="./style.css?v=20260129" />
+
+  <!-- flatpickr（カレンダーUI） -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <style>
+    .flatpickr-calendar{ border-radius:16px; box-shadow: 0 12px 30px rgba(0,0,0,.15); }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html">ひだっこcafe 予約</a>
+  </header>
+
+  <main class="container">
+    <h1>予約する</h1>
+
+    <section class="card">
+      <div class="row">
+        <label for="date">日付</label>
+        <input id="date" type="text" placeholder="日付を選択" />
+      </div>
+
+      <div class="row">
+        <label>席の希望</label>
+        <select id="seatPref">
+          <option value="either">どちらでも</option>
+          <option value="counter">カウンターのみ</option>
+          <option value="table">テーブル希望</option>
+          <option value="zashiki">座敷希望</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label>時間</label>
+        <select id="time"></select>
+        <small id="timeHelp" class="muted"></small>
+      </div>
+
+      <div class="row">
+        <label>人数</label>
+        <input id="people" type="number" min="1" max="20" value="2" />
+      </div>
+
+      <div class="row">
+        <label>お名前</label>
+        <input id="name" type="text" placeholder="例：山田 太郎" />
+      </div>
+
+      <div class="row">
+        <label>電話番号</label>
+        <input id="phone" type="tel" placeholder="例：09012345678（ハイフン可）" />
+      </div>
+
+      <div class="row">
+        <label>備考</label>
+        <textarea id="note" rows="3" placeholder="アレルギーなど（任意）"></textarea>
+      </div>
+
+      <div class="actions">
+        <button id="submit" class="primary" type="button">この内容で送信</button>
+      </div>
+
+      <p class="muted" style="margin-top:10px;">
+        ※ 予約は「承認待ち（仮予約）」で受付します。承認後に確定通知が届きます。<br>
+        ※ 土日は休みのため予約できません。<br>
+        ※ キャンセルはお電話でお願いします。
+      </p>
+    </section>
+
+    <p><a href="./availability.html">空席状況を見る</a> / <a href="./manage.html">予約の確認・変更</a></p>
+  </main>
+
+  <script src="./app.js?v=20260129"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script>
+    const $date = document.getElementById("date");
+    const $seatPref = document.getElementById("seatPref");
+    const $time = document.getElementById("time");
+    const $timeHelp = document.getElementById("timeHelp");
+    const $people = document.getElementById("people");
+    const $name = document.getElementById("name");
+    const $phone = document.getElementById("phone");
+    const $note = document.getElementById("note");
+    const $submit = document.getElementById("submit");
+
+    let availability = null;
+    let fp = null; // flatpickr instance
+
+    function normalizePhone(s) {
+      return String(s || "").replace(/[^\d]/g, "");
+    }
+    function jstTodayYmd() {
+      const nowJst = new Date(Date.now() + 9*60*60*1000);
+      return nowJst.toISOString().slice(0,10);
+    }
+    function isWeekendDateObj(d) {
+      const w = d.getDay(); // 0 Sun, 6 Sat
+      return w === 0 || w === 6;
+    }
+    function isWeekendYmd(ymd) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(ymd || ""))) return false;
+      const [y,m,d] = ymd.split("-").map(Number);
+      const day = new Date(Date.UTC(y, m-1, d)).getUTCDay();
+      return day === 0 || day === 6;
+    }
+    function nextWeekdayYmd(ymd) {
+      const [y,m,d] = ymd.split("-").map(Number);
+      let t = Date.UTC(y, m-1, d);
+      while (true) {
+        const day = new Date(t).getUTCDay();
+        if (day !== 0 && day !== 6) break;
+        t += 24*60*60*1000;
+      }
+      return new Date(t).toISOString().slice(0,10);
+    }
+
+    // ====== 席の可否判定（数字は出さず「予約可/満席」）======
+    function canZashiki(sl) {
+      const z = sl.zashikiEnabled ? Number(sl.zashikiRemain || 0) : 0;
+      return !!sl.zashikiEnabled && z > 0;
+    }
+    function canCounter(sl) {
+      return Number(sl.counterRemain || 0) > 0;
+    }
+    function canTable(people, sl) {
+      const p = Number(people || 1);
+      const t2 = Number(sl.table2Remain || 0);
+      const tl = Number(sl.tableLargeRemain || 0);
+      const z = sl.zashikiEnabled ? Number(sl.zashikiRemain || 0) : 0;
+
+      if (p <= 2) return (t2 > 0) || (tl > 0);
+      if (p <= 6) return (tl > 0);
+      return !!sl.zashikiEnabled && z > 0; // 7+ は座敷へ
+    }
+    function canEither(people, sl) {
+      const p = Number(people || 1);
+
+      const can = {
+        counter: canCounter(sl),
+        table2: Number(sl.table2Remain || 0) > 0,
+        tableLarge: Number(sl.tableLargeRemain || 0) > 0,
+        zashiki: canZashiki(sl),
+      };
+
+      const order =
+        p <= 2 ? ["table2","counter","tableLarge","zashiki"]
+        : p <= 6 ? ["tableLarge","zashiki","counter","table2"]
+        : ["zashiki","tableLarge","counter","table2"];
+
+      for (const t of order) {
+        if (t === "zashiki" && !sl.zashikiEnabled) continue;
+        if (can[t]) return true;
+      }
+      return false;
+    }
+    function slotDisabled(sl) {
+      const pref = $seatPref.value;
+      const p = Number($people.value || 1);
+
+      if (pref === "counter") return !canCounter(sl);
+      if (pref === "zashiki") return !canZashiki(sl);
+      if (pref === "table")   return !canTable(p, sl);
+      return !canEither(p, sl);
+    }
+    function slotLabel(sl) {
+      const pref = $seatPref.value;
+      const p = Number($people.value || 1);
+
+      let ok = false;
+      if (pref === "counter") ok = canCounter(sl);
+      else if (pref === "zashiki") ok = canZashiki(sl);
+      else if (pref === "table") ok = canTable(p, sl);
+      else ok = canEither(p, sl);
+
+      if (pref === "zashiki" && !sl.zashikiEnabled) return `${sl.time}（座敷：受付停止）`;
+      return `${sl.time}（${ok ? "予約可" : "満席"}）`;
+    }
+
+    function renderTimes() {
+      $time.innerHTML = "";
+
+      if (!availability) {
+        const opt = document.createElement("option");
+        opt.textContent = "読み込み中…";
+        $time.appendChild(opt);
+        return;
+      }
+
+      if (availability.closed) {
+        $timeHelp.textContent = availability.reason || "休業日のため予約できません。";
+        $submit.disabled = true;
+        $time.disabled = true;
+        return;
+      }
+
+      $time.disabled = false;
+
+      let enabledCount = 0;
+      for (const sl of (availability.slots || [])) {
+        const opt = document.createElement("option");
+        opt.value = sl.time;
+        opt.textContent = slotLabel(sl);
+        opt.disabled = slotDisabled(sl);
+        if (!opt.disabled) enabledCount++;
+        $time.appendChild(opt);
+      }
+
+      if (enabledCount === 0) {
+        $timeHelp.textContent = "この条件では満席です。日付・人数・席希望を変えてください。";
+        $submit.disabled = true;
+      } else {
+        $timeHelp.textContent = "";
+        $submit.disabled = false;
+
+        const curOpt = [...$time.options].find(o => o.value === $time.value);
+        if (!curOpt || curOpt.disabled) {
+          const firstEnabled = [...$time.options].find(o => !o.disabled);
+          if (firstEnabled) $time.value = firstEnabled.value;
+        }
+      }
+    }
+
+    async function loadAvailability() {
+      const ymd = $date.value;
+
+      // 念押し：土日が来たら平日に戻す（flatpickrで基本は選べないが保険）
+      if (isWeekendYmd(ymd)) {
+        alert("土日は休みです。平日を選んでください。");
+        const fixed = nextWeekdayYmd(ymd);
+        if (fp) fp.setDate(fixed, true); // onChangeで再ロード
+        else $date.value = fixed;
+        return;
+      }
+
+      $timeHelp.textContent = "読み込み中…";
+      $submit.disabled = true;
+      availability = null;
+      renderTimes();
+
+      try {
+        availability = await Hidakko.api(`/availability?date=${encodeURIComponent($date.value)}`);
+        renderTimes();
+      } catch (e) {
+        console.error(e);
+        availability = null;
+        $timeHelp.textContent = "空席状況の取得に失敗しました。";
+        $submit.disabled = true;
+        renderTimes();
+      }
+    }
+
+    $seatPref.addEventListener("change", renderTimes);
+    $people.addEventListener("input", renderTimes);
+    $people.addEventListener("change", renderTimes);
+
+    $submit.addEventListener("click", async () => {
+      if (isWeekendYmd($date.value)) {
+        alert("土日は休みです。平日を選んでください。");
+        return;
+      }
+
+      const nm = ($name.value || "").trim();
+      const ph = normalizePhone($phone.value);
+
+      if (!nm) { alert("お名前を入力してください。"); return; }
+      if (!ph) { alert("電話番号を入力してください。"); return; }
+
+      $submit.disabled = true;
+      $submit.textContent = "送信中…";
+
+      try {
+        // ★送信直前に最新の空席状況を取り直す（直前に埋まった枠への予約を防ぐ）
+        const wantedTime = $time.value;
+        try {
+          const latest = await Hidakko.api(`/availability?date=${encodeURIComponent($date.value)}`);
+          availability = latest;
+          renderTimes();
+
+          if (latest && latest.closed) {
+            alert(latest.reason || "休業日のため予約できません。");
+            return;
+          }
+
+          const sl = (latest && latest.slots || []).find(x => x.time === wantedTime);
+          if (!sl || slotDisabled(sl)) {
+            alert("すみません。今選んでいる時間は満席になりました。別の時間を選び直してください。");
+            return;
+          }
+
+          // まだ空いているなら選択を戻して続行
+          $time.value = wantedTime;
+        } catch (e) {
+          // 取得できない場合は安全側（送信しない）
+          console.error(e);
+          alert("空席状況の再確認に失敗しました。少し待ってからもう一度お試しください。");
+          return;
+        }
+
+        const lineUserId = await tryGetLineUserId(); // app.js
+
+        const payload = {
+          date: $date.value,
+          time: $time.value,
+          people: Number($people.value || 1),
+          seatPref: $seatPref.value,
+          name: nm,
+          phone: $phone.value, // サーバ側で正規化される。表示用に入力値もOK
+          note: $note.value,
+          lineUserId: lineUserId || null,
+        };
+
+        const r = await Hidakko.api("/reservations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        // ★新仕様：code を優先。旧互換で id でも動くよう保険。
+        const code = (r && (r.code || r.id) || "").toString();
+        location.href = `./done.html?code=${encodeURIComponent(code)}`;
+      } catch (e) {
+        console.error(e);
+        alert(e.message || "送信に失敗しました");
+      } finally {
+        $submit.disabled = false;
+        $submit.textContent = "この内容で送信";
+      }
+    });
+
+    // ====== flatpickr 初期化（カレンダー表示＋土日無効）======
+    (function initDatePicker(){
+      const today = jstTodayYmd();
+      const initial = isWeekendYmd(today) ? nextWeekdayYmd(today) : today;
+
+      fp = flatpickr($date, {
+        dateFormat: "Y-m-d",
+        defaultDate: initial,
+        minDate: "today",
+        disable: [ function(date){ return isWeekendDateObj(date); } ], // 土日無効
+        onChange: function() { loadAvailability(); }
+      });
+    })();
+
+    // init
+    renderTimes();
+    loadAvailability();
+  </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "functions",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.19.2",
+    "firebase-admin": "^12.5.0",
+    "firebase-functions": "^4.9.0",
+    "luxon": "^3.5.0"
+  }
+}

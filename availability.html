@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>空席状況 | ひだっこcafe</title>
+
+  <link rel="stylesheet" href="./style.css?v=20260129" />
+
+  <!-- flatpickr（カレンダーUI） -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <style>
+    /* 日付バー（見た目はinputライク） */
+    .dateBar{
+      position: relative; /* ←重要：中の透明inputの土台 */
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background:#fff;
+      cursor:pointer;
+      user-select:none;
+    }
+    .dateBar:focus-within{
+      border-color: rgba(37,99,235,.55);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+    }
+    .dateBar .dateText{ font-weight:700; }
+    .dateBar .hint{ color: var(--muted); font-size: 12px; }
+    .dateBar .icon{ opacity:.6; }
+
+    /* ★ここが肝：inputをバー全面に透明で重ねる（off-screenにしない） */
+    #date{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      opacity:0;
+      border:0;
+      background:transparent;
+      cursor:pointer;
+    }
+
+    /* 空席カード */
+    .slotCard{
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin: 10px 0;
+      background:#fff;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .slotCard .time{
+      font-weight:900;
+      letter-spacing:.02em;
+      font-size:16px;
+      min-width:80px;
+    }
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      justify-content:flex-end;
+      margin-left:auto;
+    }
+    .chip{
+      font-size:13px;
+      padding:6px 10px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:#fff;
+      white-space:nowrap;
+    }
+    .chip b{ font-weight:900; }
+    .chip.off{
+      color: var(--muted);
+      background:#f9fafb;
+    }
+    .chip.ok{
+      border-color: rgba(16,185,129,.35);
+      box-shadow: 0 0 0 3px rgba(16,185,129,.08) inset;
+    }
+    .chip.ng{
+      border-color: rgba(239,68,68,.35);
+      box-shadow: 0 0 0 3px rgba(239,68,68,.08) inset;
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html">ひだっこcafe 予約</a>
+  </header>
+
+  <main class="container">
+    <h1>空席状況</h1>
+
+    <section class="card">
+      <!-- バーの上に透明input（flatpickr対象） -->
+      <div id="dateBar" class="dateBar" role="button" aria-label="日付を選択">
+        <input id="date" type="text" readonly aria-label="日付" />
+
+        <div>
+          <div class="dateText" id="dateText">----</div>
+          <div class="hint">タップで日付を変更（土日休み）</div>
+        </div>
+        <div class="icon">📅</div>
+      </div>
+
+      <p id="msg" class="muted" style="margin-top:10px;"></p>
+    </section>
+
+    <section class="card">
+      <h2 style="margin-top:0;">時間別</h2>
+      <div id="list"></div>
+      <p class="muted" style="margin-top:12px;">
+        表示は「予約可 / 満席 / 受付停止」のみです（数は出しません）。
+      </p>
+    </section>
+
+    <p><a href="./reserve.html">予約する</a> / <a href="./manage.html">予約の確認・変更</a></p>
+  </main>
+
+  <script src="./app.js?v=20260129"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script>
+    const $date     = document.getElementById("date");
+    const $dateText = document.getElementById("dateText");
+    const $msg      = document.getElementById("msg");
+    const $list     = document.getElementById("list");
+
+    let availability = null;
+    let fp = null;
+
+    function jstTodayYmd() {
+      const nowJst = new Date(Date.now() + 9*60*60*1000);
+      return nowJst.toISOString().slice(0,10);
+    }
+    function isWeekendDateObj(d) {
+      const w = d.getDay(); // 0=Sun,6=Sat（flatpickrのDateズレ対策）
+      return w === 0 || w === 6;
+    }
+    function isWeekendYmd(ymd) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(ymd || ""))) return false;
+      const [y,m,d] = ymd.split("-").map(Number);
+      const day = new Date(Date.UTC(y, m-1, d)).getUTCDay();
+      return day === 0 || day === 6;
+    }
+    function nextWeekdayYmd(ymd) {
+      const [y,m,d] = ymd.split("-").map(Number);
+      let t = Date.UTC(y, m-1, d);
+      while (true) {
+        const day = new Date(t).getUTCDay();
+        if (day !== 0 && day !== 6) break;
+        t += 24*60*60*1000;
+      }
+      return new Date(t).toISOString().slice(0,10);
+    }
+
+    function setDateText(ymd){
+      $dateText.textContent = ymd.replaceAll("-", "/");
+    }
+
+    // 予約ページと揃えた“可否ロジック”（数は出さない）
+    function canZashiki(sl) {
+      const z = sl.zashikiEnabled ? Number(sl.zashikiRemain || 0) : 0;
+      return !!sl.zashikiEnabled && z > 0;
+    }
+    function canCounter(sl) {
+      return Number(sl.counterRemain || 0) > 0;
+    }
+    function canTable(people, sl) {
+      const p  = Number(people || 2); // 空席状況は目安2名
+      const t2 = Number(sl.table2Remain || 0);
+      const tl = Number(sl.tableLargeRemain || 0);
+      const z  = sl.zashikiEnabled ? Number(sl.zashikiRemain || 0) : 0;
+
+      if (p <= 2) return (t2 > 0) || (tl > 0);
+      if (p <= 6) return (tl > 0);
+      return !!sl.zashikiEnabled && z > 0; // 7+ は座敷へ
+    }
+
+    function labelOkNg(ok){ return ok ? "予約可" : "満席"; }
+
+    function render() {
+      $list.innerHTML = "";
+
+      if (!availability) {
+        $msg.textContent = "読み込み中…";
+        return;
+      }
+
+      if (availability.closed) {
+        $msg.textContent = availability.reason || "休業日のため表示できません。";
+        $list.innerHTML = `<p class="muted">別の日付を選んでください。</p>`;
+        return;
+      }
+
+      $msg.textContent = "";
+
+      const slots = availability.slots || [];
+      if (!slots.length) {
+        $list.innerHTML = `<p class="muted">表示できる枠がありません。</p>`;
+        return;
+      }
+
+      const assumedPeople = 2;
+
+      $list.innerHTML = slots.map(sl => {
+        const okC = canCounter(sl);
+        const okT = canTable(assumedPeople, sl);
+        const okZ = canZashiki(sl);
+
+        const zText = sl.zashikiEnabled ? labelOkNg(okZ) : "受付停止";
+
+        return `
+          <div class="slotCard">
+            <div class="time">${sl.time}</div>
+            <div class="chips">
+              <div class="chip ${okC ? "ok" : "ng"}">カウンター：<b>${labelOkNg(okC)}</b></div>
+              <div class="chip ${okT ? "ok" : "ng"}">テーブル：<b>${labelOkNg(okT)}</b></div>
+              <div class="chip ${sl.zashikiEnabled ? (okZ ? "ok" : "ng") : "off"}">座敷：<b>${zText}</b></div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function load() {
+      // 念押し：土日は弾く
+      if (isWeekendYmd($date.value)) {
+        const fixed = nextWeekdayYmd($date.value);
+        $date.value = fixed;
+        setDateText(fixed);
+      }
+
+      $msg.textContent = "読み込み中…";
+      availability = null;
+      render();
+
+      try {
+        availability = await Hidakko.api(`/availability?date=${encodeURIComponent($date.value)}`);
+      } catch (e) {
+        console.error(e);
+        $msg.textContent = "取得に失敗しました。時間をおいて再度お試しください。";
+        availability = { slots: [] };
+      }
+
+      render();
+    }
+
+    (function init(){
+      const today = jstTodayYmd();
+      const initial = isWeekendYmd(today) ? nextWeekdayYmd(today) : today;
+
+      fp = flatpickr($date, {
+        dateFormat: "Y-m-d",
+        defaultDate: initial,
+        minDate: "today",
+        disableMobile: true,            // ★スマホでもflatpickrを強制
+        disable: [ (d) => isWeekendDateObj(d) ],
+        onChange: function(_, dateStr){
+          setDateText(dateStr);
+          load(); // 日付変えたら自動更新
+        }
+      });
+
+      $date.value = initial;
+      setDateText(initial);
+      load();
+    })();
+  </script>
+</body>
+</html>
