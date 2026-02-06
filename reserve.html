@@ -1,13 +1,13 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>予約する | ひだっこcafe</title>
+  <title>莠育ｴ・☆繧・| 縺ｲ縺縺｣縺田afe</title>
 
-  <link rel="stylesheet" href="./style.css?v=20260206_02" />
+  <link rel="stylesheet" href="./style.css?v=20260206_03" />
 
-  <!-- flatpickr（カレンダーUI） -->
+  <!-- flatpickr・医き繝ｬ繝ｳ繝繝ｼUI・・-->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <style>
     .flatpickr-calendar{ border-radius:16px; box-shadow: 0 12px 30px rgba(0,0,0,.15); }
@@ -23,75 +23,74 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="./index.html">ひだっこcafe 予約</a>
+    <a class="brand" href="./index.html">縺ｲ縺縺｣縺田afe 莠育ｴ・/a>
   </header>
 
   <main class="container">
-    <h1>予約する</h1>
+    <h1>莠育ｴ・☆繧・/h1>
 
     <section class="card">
       <div class="row">
-        <label for="date">日付</label>
-        <input id="date" type="text" placeholder="日付を選択" required />
+        <label for="date">譌･莉・/label>
+        <input id="date" type="text" placeholder="譌･莉倥ｒ驕ｸ謚・ required />
       </div>
 
       <div class="row">
-        <label>席の希望</label>
+        <label>蟶ｭ縺ｮ蟶梧悍</label>
         <select id="seatPref">
-          <option value="either">どちらでも</option>
-          <option value="counter">カウンターのみ</option>
-          <option value="table">テーブル希望</option>
-          <option value="zashiki">座敷希望</option>
+          <option value="either">縺ｩ縺｡繧峨〒繧・/option>
+          <option value="counter">繧ｫ繧ｦ繝ｳ繧ｿ繝ｼ縺ｮ縺ｿ</option>
+          <option value="table">繝・・繝悶Ν蟶梧悍</option>
+          <option value="zashiki">蠎ｧ謨ｷ蟶梧悍</option>
         </select>
       </div>
 
       <div class="row">
-        <label>時間</label>
+        <label>譎る俣</label>
         <select id="time" required></select>
         <small id="timeHelp" class="muted"></small>
       </div>
 
             <div class="row">
-        <label>人数</label>
+        <label>莠ｺ謨ｰ</label>
         <div class="peopleSplit">
           <div class="peopleBox">
-            <label for="adult">大人</label>
+            <label for="adult">螟ｧ莠ｺ</label>
             <input id="adult" type="number" min="1" max="20" value="2" required />
           </div>
           <div class="peopleBox">
-            <label for="child">子供</label>
+            <label for="child">蟄蝉ｾ・/label>
             <input id="child" type="number" min="0" max="20" value="0" required />
           </div>
         </div>
       </div>
 
       <div class="row">
-        <label>お名前</label>
-        <input id="name" type="text" placeholder="例：山田 太郎" required />
+        <label>縺雁錐蜑・/label>
+        <input id="name" type="text" placeholder="萓具ｼ壼ｱｱ逕ｰ 螟ｪ驛・ required />
       </div>
 
       <div class="row">
-        <label>電話番号</label>
-        <input id="phone" type="tel" placeholder="例：09012345678（ハイフン可）" required />
+        <label>髮ｻ隧ｱ逡ｪ蜿ｷ</label>
+        <input id="phone" type="tel" placeholder="萓具ｼ・9012345678・医ワ繧､繝輔Φ蜿ｯ・・ required />
       </div>
 
       <div class="row">
-        <label>備考</label>
-        <textarea id="note" rows="3" placeholder="アレルギーなど（任意）"></textarea>
+        <label>蛯呵・/label>
+        <textarea id="note" rows="3" placeholder="繧｢繝ｬ繝ｫ繧ｮ繝ｼ縺ｪ縺ｩ・井ｻｻ諢擾ｼ・></textarea>
       </div>
 
       <div class="actions">
-        <button id="submit" class="primary" type="button">この内容で送信</button>
+        <button id="submit" class="primary" type="button">縺薙・蜀・ｮｹ縺ｧ騾∽ｿ｡</button>
       </div>
 
       <p class="muted" style="margin-top:10px;">
-        ※ 予約は「承認待ち（仮予約）」で受付します。承認後に確定通知が届きます。<br>
-        ※ 土日は休みのため予約できません。<br>
-        ※ キャンセルはお電話でお願いします。
-      </p>
+        窶ｻ 莠育ｴ・・縲梧価隱榊ｾ・■・井ｻｮ莠育ｴ・ｼ峨阪〒蜿嶺ｻ倥＠縺ｾ縺吶よ価隱榊ｾ後↓遒ｺ螳夐夂衍縺悟ｱ翫″縺ｾ縺吶・br>
+        窶ｻ 蝨滓律縺ｯ莨代∩縺ｮ縺溘ａ莠育ｴ・〒縺阪∪縺帙ｓ縲・br>
+        窶ｻ 繧ｭ繝｣繝ｳ繧ｻ繝ｫ縺ｯ縺企崕隧ｱ縺ｧ縺企｡倥＞縺励∪縺吶・      </p>
     </section>
 
-    <p><a href="./availability.html">空席状況を見る</a> / <a href="./manage.html">予約の確認・変更</a></p>
+    <p><a href="./availability.html">遨ｺ蟶ｭ迥ｶ豕√ｒ隕九ｋ</a> / <a href="./manage.html">莠育ｴ・・遒ｺ隱阪・螟画峩</a></p>
   </main>
 
   <script src="./app.js?v=20260129"></script>
@@ -125,8 +124,7 @@
       a = Math.max(1, Math.min(20, a));
       c = Math.max(0, Math.min(20, c));
 
-      // 合計は 20 まで（旧 people と互換）
-      if (a + c > 20) c = Math.max(0, 20 - a);
+      // 蜷郁ｨ医・ 20 縺ｾ縺ｧ・域立 people 縺ｨ莠呈鋤・・      if (a + c > 20) c = Math.max(0, 20 - a);
 
       $adult.value = String(a);
       $child.value = String(c);
@@ -160,7 +158,7 @@
       return new Date(t).toISOString().slice(0,10);
     }
 
-    // ====== 席の可否判定（数字は出さず「予約可/満席」）======
+    // ====== 蟶ｭ縺ｮ蜿ｯ蜷ｦ蛻､螳夲ｼ域焚蟄励・蜃ｺ縺輔★縲御ｺ育ｴ・庄/貅蟶ｭ縲搾ｼ・=====
     function canZashiki(sl) {
       const z = sl.zashikiEnabled ? Number(sl.zashikiRemain || 0) : 0;
       return !!sl.zashikiEnabled && z > 0;
@@ -176,7 +174,7 @@
 
       if (p <= 2) return (t2 > 0) || (tl > 0);
       if (p <= 6) return (tl > 0);
-      return !!sl.zashikiEnabled && z > 0; // 7+ は座敷へ
+      return !!sl.zashikiEnabled && z > 0; // 7+ 縺ｯ蠎ｧ謨ｷ縺ｸ
     }
     function canEither(people, sl) {
       const p = Number(people || 1);
@@ -218,8 +216,8 @@
       else if (pref === "table") ok = canTable(p, sl);
       else ok = canEither(p, sl);
 
-      if (pref === "zashiki" && !sl.zashikiEnabled) return `${sl.time}（座敷：受付停止）`;
-      return `${sl.time}（${ok ? "予約可" : "満席"}）`;
+      if (pref === "zashiki" && !sl.zashikiEnabled) return `${sl.time}・亥ｺｧ謨ｷ・壼女莉伜●豁｢・荏;
+      return `${sl.time}・・{ok ? "莠育ｴ・庄" : "貅蟶ｭ"}・荏;
     }
 
     function renderTimes() {
@@ -227,13 +225,13 @@
 
       if (!availability) {
         const opt = document.createElement("option");
-        opt.textContent = "読み込み中…";
+        opt.textContent = "隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ窶ｦ";
         $time.appendChild(opt);
         return;
       }
 
       if (availability.closed) {
-        $timeHelp.textContent = availability.reason || "休業日のため予約できません。";
+        $timeHelp.textContent = availability.reason || "莨第･ｭ譌･縺ｮ縺溘ａ莠育ｴ・〒縺阪∪縺帙ｓ縲・;
         $submit.disabled = true;
         $time.disabled = true;
         return;
@@ -252,7 +250,7 @@
       }
 
       if (enabledCount === 0) {
-        $timeHelp.textContent = "この条件では満席です。日付・人数・席希望を変えてください。";
+        $timeHelp.textContent = "縺薙・譚｡莉ｶ縺ｧ縺ｯ貅蟶ｭ縺ｧ縺吶よ律莉倥・莠ｺ謨ｰ繝ｻ蟶ｭ蟶梧悍繧貞､峨∴縺ｦ縺上□縺輔＞縲・;
         $submit.disabled = true;
       } else {
         $timeHelp.textContent = "";
@@ -269,16 +267,14 @@
     async function loadAvailability() {
       const ymd = $date.value;
 
-      // 念押し：土日が来たら平日に戻す（flatpickrで基本は選べないが保険）
-      if (isWeekendYmd(ymd)) {
-        alert("土日は休みです。平日を選んでください。");
+      // 蠢ｵ謚ｼ縺暦ｼ壼悄譌･縺梧擂縺溘ｉ蟷ｳ譌･縺ｫ謌ｻ縺呻ｼ・latpickr縺ｧ蝓ｺ譛ｬ縺ｯ驕ｸ縺ｹ縺ｪ縺・′菫晞匱・・      if (isWeekendYmd(ymd)) {
+        alert("蝨滓律縺ｯ莨代∩縺ｧ縺吶ょｹｳ譌･繧帝∈繧薙〒縺上□縺輔＞縲・);
         const fixed = nextWeekdayYmd(ymd);
-        if (fp) fp.setDate(fixed, true); // onChangeで再ロード
-        else $date.value = fixed;
+        if (fp) fp.setDate(fixed, true); // onChange縺ｧ蜀阪Ο繝ｼ繝・        else $date.value = fixed;
         return;
       }
 
-      $timeHelp.textContent = "読み込み中…";
+      $timeHelp.textContent = "隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ窶ｦ";
       $submit.disabled = true;
       availability = null;
       renderTimes();
@@ -289,7 +285,7 @@
       } catch (e) {
         console.error(e);
         availability = null;
-        $timeHelp.textContent = "空席状況の取得に失敗しました。";
+        $timeHelp.textContent = "遨ｺ蟶ｭ迥ｶ豕√・蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆縲・;
         $submit.disabled = true;
         renderTimes();
       }
@@ -303,52 +299,49 @@
 
     $submit.addEventListener("click", async () => {
       if (isWeekendYmd($date.value)) {
-        alert("土日は休みです。平日を選んでください。");
+        alert("蝨滓律縺ｯ莨代∩縺ｧ縺吶ょｹｳ譌･繧帝∈繧薙〒縺上□縺輔＞縲・);
         return;
       }
 
-      if (!$date.value) { alert("日付を選んでください。"); return; }
-      if (!$time.value) { alert("時間を選んでください。"); return; }
+      if (!$date.value) { alert("譌･莉倥ｒ驕ｸ繧薙〒縺上□縺輔＞縲・); return; }
+      if (!$time.value) { alert("譎る俣繧帝∈繧薙〒縺上□縺輔＞縲・); return; }
 
       const pc = clampPeopleInputs();
-      if (pc.adults < 1) { alert("大人は1以上で入力してください。"); return; }
-      if (pc.children < 0) { alert("子供は0以上で入力してください。"); return; }
-      if (pc.total < 1) { alert("人数を入力してください。"); return; }
+      if (pc.adults < 1) { alert("螟ｧ莠ｺ縺ｯ1莉･荳翫〒蜈･蜉帙＠縺ｦ縺上□縺輔＞縲・); return; }
+      if (pc.children < 0) { alert("蟄蝉ｾ帙・0莉･荳翫〒蜈･蜉帙＠縺ｦ縺上□縺輔＞縲・); return; }
+      if (pc.total < 1) { alert("莠ｺ謨ｰ繧貞・蜉帙＠縺ｦ縺上□縺輔＞縲・); return; }
 
       const nm = ($name.value || "").trim();
       const ph = normalizePhone($phone.value);
 
-      if (!nm) { alert("お名前を入力してください。"); return; }
-      if (!ph) { alert("電話番号を入力してください。"); return; }
+      if (!nm) { alert("縺雁錐蜑阪ｒ蜈･蜉帙＠縺ｦ縺上□縺輔＞縲・); return; }
+      if (!ph) { alert("髮ｻ隧ｱ逡ｪ蜿ｷ繧貞・蜉帙＠縺ｦ縺上□縺輔＞縲・); return; }
 
       $submit.disabled = true;
-      $submit.textContent = "送信中…";
+      $submit.textContent = "騾∽ｿ｡荳ｭ窶ｦ";
 
       try {
-        // ★送信直前に最新の空席状況を取り直す（直前に埋まった枠への予約を防ぐ）
-        const wantedTime = $time.value;
+        // 笘・∽ｿ｡逶ｴ蜑阪↓譛譁ｰ縺ｮ遨ｺ蟶ｭ迥ｶ豕√ｒ蜿悶ｊ逶ｴ縺呻ｼ育峩蜑阪↓蝓九∪縺｣縺滓棧縺ｸ縺ｮ莠育ｴ・ｒ髦ｲ縺撰ｼ・        const wantedTime = $time.value;
         try {
           const latest = await Hidakko.api(`/availability?date=${encodeURIComponent($date.value)}`);
           availability = latest;
           renderTimes();
 
           if (latest && latest.closed) {
-            alert(latest.reason || "休業日のため予約できません。");
+            alert(latest.reason || "莨第･ｭ譌･縺ｮ縺溘ａ莠育ｴ・〒縺阪∪縺帙ｓ縲・);
             return;
           }
 
           const sl = (latest && latest.slots || []).find(x => x.time === wantedTime);
           if (!sl || slotDisabled(sl)) {
-            alert("すみません。今選んでいる時間は満席になりました。別の時間を選び直してください。");
+            alert("縺吶∩縺ｾ縺帙ｓ縲ゆｻ企∈繧薙〒縺・ｋ譎る俣縺ｯ貅蟶ｭ縺ｫ縺ｪ繧翫∪縺励◆縲ょ挨縺ｮ譎る俣繧帝∈縺ｳ逶ｴ縺励※縺上□縺輔＞縲・);
             return;
           }
 
-          // まだ空いているなら選択を戻して続行
-          $time.value = wantedTime;
+          // 縺ｾ縺遨ｺ縺・※縺・ｋ縺ｪ繧蛾∈謚槭ｒ謌ｻ縺励※邯夊｡・          $time.value = wantedTime;
         } catch (e) {
-          // 取得できない場合は安全側（送信しない）
-          console.error(e);
-          alert("空席状況の再確認に失敗しました。少し待ってからもう一度お試しください。");
+          // 蜿門ｾ励〒縺阪↑縺・ｴ蜷医・螳牙・蛛ｴ・磯∽ｿ｡縺励↑縺・ｼ・          console.error(e);
+          alert("遨ｺ蟶ｭ迥ｶ豕√・蜀咲｢ｺ隱阪↓螟ｱ謨励＠縺ｾ縺励◆縲ょｰ代＠蠕・▲縺ｦ縺九ｉ繧ゅ≧荳蠎ｦ縺願ｩｦ縺励￥縺縺輔＞縲・);
           return;
         }
 
@@ -362,7 +355,7 @@
           children: clampPeopleInputs().children,
           seatPref: $seatPref.value,
           name: nm,
-          phone: $phone.value, // サーバ側で正規化される。表示用に入力値もOK
+          phone: $phone.value, // 繧ｵ繝ｼ繝仙・縺ｧ豁｣隕丞喧縺輔ｌ繧九り｡ｨ遉ｺ逕ｨ縺ｫ蜈･蜉帛､繧０K
           note: $note.value,
           lineUserId: lineUserId || null,
         };
@@ -373,19 +366,18 @@
           body: JSON.stringify(payload)
         });
 
-        // ★新仕様：code を優先。旧互換で id でも動くよう保険。
-        const code = (r && (r.code || r.id) || "").toString();
+        // 笘・眠莉墓ｧ假ｼ喞ode 繧貞━蜈医よ立莠呈鋤縺ｧ id 縺ｧ繧ょ虚縺上ｈ縺・ｿ晞匱縲・        const code = (r && (r.code || r.id) || "").toString();
         location.href = `./done.html?code=${encodeURIComponent(code)}`;
       } catch (e) {
         console.error(e);
-        alert(e.message || "送信に失敗しました");
+        alert(e.message || "騾∽ｿ｡縺ｫ螟ｱ謨励＠縺ｾ縺励◆");
       } finally {
         $submit.disabled = false;
-        $submit.textContent = "この内容で送信";
+        $submit.textContent = "縺薙・蜀・ｮｹ縺ｧ騾∽ｿ｡";
       }
     });
 
-    // ====== flatpickr 初期化（カレンダー表示＋土日無効）======
+    // ====== flatpickr 蛻晄悄蛹厄ｼ医き繝ｬ繝ｳ繝繝ｼ陦ｨ遉ｺ・句悄譌･辟｡蜉ｹ・・=====
     (function initDatePicker(){
       const today = jstTodayYmd();
       const initial = isWeekendYmd(today) ? nextWeekdayYmd(today) : today;
@@ -394,7 +386,7 @@
         dateFormat: "Y-m-d",
         defaultDate: initial,
         minDate: "today",
-        disable: [ function(date){ return isWeekendDateObj(date); } ], // 土日無効
+        disable: [ function(date){ return isWeekendDateObj(date); } ], // 蝨滓律辟｡蜉ｹ
         onChange: function() { loadAvailability(); }
       });
     })();
@@ -405,3 +397,4 @@
   </script>
 </body>
 </html>
+

@@ -1,13 +1,13 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>予約の確認・変更 | ひだっこcafe</title>
+  <title>莠育ｴ・・遒ｺ隱阪・螟画峩 | 縺ｲ縺縺｣縺田afe</title>
 
-  <link rel="stylesheet" href="./style.css?v=20260206_02" />
+  <link rel="stylesheet" href="./style.css?v=20260206_03" />
 
-  <!-- flatpickr（カレンダーUI） -->
+  <!-- flatpickr・医き繝ｬ繝ｳ繝繝ｼUI・・-->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <style>
     .flatpickr-calendar{ border-radius:16px; box-shadow: 0 12px 30px rgba(0,0,0,.15); }
@@ -23,87 +23,86 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="./index.html">ひだっこcafe 予約</a>
+    <a class="brand" href="./index.html">縺ｲ縺縺｣縺田afe 莠育ｴ・/a>
   </header>
 
   <main class="container">
-    <h1>予約の確認・変更</h1>
+    <h1>莠育ｴ・・遒ｺ隱阪・螟画峩</h1>
 
     <section class="card">
-      <h2 style="margin-top:0;">予約を開く</h2>
+      <h2 style="margin-top:0;">莠育ｴ・ｒ髢九￥</h2>
 
       <div class="row">
-        <label>予約番号</label>
-        <input id="rid" type="text" placeholder="例：123456（6桁）" />
+        <label>莠育ｴ・分蜿ｷ</label>
+        <input id="rid" type="text" placeholder="萓具ｼ・23456・・譯・ｼ・ />
       </div>
 
       <div class="row">
-        <label>電話番号</label>
-        <input id="phone" type="tel" placeholder="予約時の電話番号（ハイフン可）" />
+        <label>髮ｻ隧ｱ逡ｪ蜿ｷ</label>
+        <input id="phone" type="tel" placeholder="莠育ｴ・凾縺ｮ髮ｻ隧ｱ逡ｪ蜿ｷ・医ワ繧､繝輔Φ蜿ｯ・・ />
       </div>
 
       <div class="actions">
-        <button id="lookup" class="primary" type="button">確認</button>
+        <button id="lookup" class="primary" type="button">遒ｺ隱・/button>
       </div>
 
-      <p class="muted">※ キャンセルはお電話でお願いします。</p>
+      <p class="muted">窶ｻ 繧ｭ繝｣繝ｳ繧ｻ繝ｫ縺ｯ縺企崕隧ｱ縺ｧ縺企｡倥＞縺励∪縺吶・/p>
     </section>
 
     <section id="detail" class="card" style="display:none;">
-      <h2 style="margin-top:0;">予約内容</h2>
+      <h2 style="margin-top:0;">莠育ｴ・・螳ｹ</h2>
 
       <div id="statusBox" class="notice"></div>
 
       <div class="row">
-        <label for="date">日付</label>
-        <input id="date" type="text" placeholder="日付を選択" required />
+        <label for="date">譌･莉・/label>
+        <input id="date" type="text" placeholder="譌･莉倥ｒ驕ｸ謚・ required />
       </div>
 
       <div class="row">
-        <label>席の希望</label>
+        <label>蟶ｭ縺ｮ蟶梧悍</label>
         <select id="seatPref">
-          <option value="either">どちらでも</option>
-          <option value="counter">カウンターのみ</option>
-          <option value="table">テーブル希望</option>
-          <option value="zashiki">座敷希望</option>
+          <option value="either">縺ｩ縺｡繧峨〒繧・/option>
+          <option value="counter">繧ｫ繧ｦ繝ｳ繧ｿ繝ｼ縺ｮ縺ｿ</option>
+          <option value="table">繝・・繝悶Ν蟶梧悍</option>
+          <option value="zashiki">蠎ｧ謨ｷ蟶梧悍</option>
         </select>
       </div>
 
       <div class="row">
-        <label>時間</label>
+        <label>譎る俣</label>
         <select id="time" required></select>
         <small id="timeHelp" class="muted"></small>
       </div>
 
             <div class="row">
-        <label>人数</label>
+        <label>莠ｺ謨ｰ</label>
         <div class="peopleSplit">
           <div class="peopleBox">
-            <label for="adult">大人</label>
+            <label for="adult">螟ｧ莠ｺ</label>
             <input id="adult" type="number" min="1" max="20" required />
           </div>
           <div class="peopleBox">
-            <label for="child">子供</label>
+            <label for="child">蟄蝉ｾ・/label>
             <input id="child" type="number" min="0" max="20" required />
           </div>
         </div>
       </div>
 
       <div class="row">
-        <label>備考</label>
+        <label>蛯呵・/label>
         <textarea id="note" rows="3"></textarea>
       </div>
 
       <div class="actions">
-        <button id="update" class="primary" type="button">変更を送信（再承認）</button>
-        <a class="btn" href="./index.html">トップへ戻る</a>
+        <button id="update" class="primary" type="button">螟画峩繧帝∽ｿ｡・亥・謇ｿ隱搾ｼ・/button>
+        <a class="btn" href="./index.html">繝医ャ繝励∈謌ｻ繧・/a>
       </div>
 
       <p class="muted">
-        ※ 変更は<strong>2日前まで</strong>可能です。<br>
-        ※ 土日は休みのため予約できません。<br>
-        ※ キャンセルはお電話でお願いします。
-      </p>
+        窶ｻ 螟画峩縺ｯ<strong>2譌･蜑阪∪縺ｧ</strong>蜿ｯ閭ｽ縺ｧ縺吶・br>
+        窶ｻ 蝨滓律縺ｯ莨代∩縺ｮ縺溘ａ莠育ｴ・〒縺阪∪縺帙ｓ縲・br>
+        窶ｻ 繧ｭ繝｣繝ｳ繧ｻ繝ｫ縺ｯ縺企崕隧ｱ縺ｧ縺企｡倥＞縺励∪縺吶・      </p>
     </section>
   </main>
 
@@ -196,27 +195,27 @@
        $child.disabled = !enabled;
       $note.disabled = !enabled;
       $update.disabled = !enabled;
-      if (!enabled) $update.title = "変更は2日前まで可能です";
+      if (!enabled) $update.title = "螟画峩縺ｯ2譌･蜑阪∪縺ｧ蜿ｯ閭ｽ縺ｧ縺・;
       else $update.title = "";
     }
 
     function statusText(r) {
       const s = r.status;
-      if (s === "pending") return "状態：承認待ち（仮予約）";
+      if (s === "pending") return "迥ｶ諷具ｼ壽価隱榊ｾ・■・井ｻｮ莠育ｴ・ｼ・;
       if (s === "confirmed") {
         const seat =
-          r.seatType === "zashiki" ? "座敷" :
-          (r.seatType === "counter" ? "カウンター" :
-          (r.seatType === "table2" ? "テーブル（2人）" :
-          (r.seatType === "tableLarge" ? "テーブル（3〜6）" : "未確定")));
-        return `状態：確定（席：${seat}）`;
+          r.seatType === "zashiki" ? "蠎ｧ謨ｷ" :
+          (r.seatType === "counter" ? "繧ｫ繧ｦ繝ｳ繧ｿ繝ｼ" :
+          (r.seatType === "table2" ? "繝・・繝悶Ν・・莠ｺ・・ :
+          (r.seatType === "tableLarge" ? "繝・・繝悶Ν・・縲・・・ : "譛ｪ遒ｺ螳・)));
+        return `迥ｶ諷具ｼ夂｢ｺ螳夲ｼ亥ｸｭ・・{seat}・荏;
       }
-      if (s === "rejected") return "状態：お断り";
-      if (s === "canceled") return "状態：キャンセル";
-      return `状態：${s}`;
+      if (s === "rejected") return "迥ｶ諷具ｼ壹♀譁ｭ繧・;
+      if (s === "canceled") return "迥ｶ諷具ｼ壹く繝｣繝ｳ繧ｻ繝ｫ";
+      return `迥ｶ諷具ｼ・{s}`;
     }
 
-    // ====== 席の可否判定（数字は出さず「予約可/満席」）======
+    // ====== 蟶ｭ縺ｮ蜿ｯ蜷ｦ蛻､螳夲ｼ域焚蟄励・蜃ｺ縺輔★縲御ｺ育ｴ・庄/貅蟶ｭ縲搾ｼ・=====
     function canZashiki(sl) {
       const z = sl.zashikiEnabled ? Number(sl.zashikiRemain || 0) : 0;
       return !!sl.zashikiEnabled && z > 0;
@@ -232,7 +231,7 @@
 
       if (p <= 2) return (t2 > 0) || (tl > 0);
       if (p <= 6) return (tl > 0);
-      return !!sl.zashikiEnabled && z > 0; // 7+ は座敷へ
+      return !!sl.zashikiEnabled && z > 0; // 7+ 縺ｯ蠎ｧ謨ｷ縺ｸ
     }
     function canEither(people, sl) {
       const p = Number(people || 1);
@@ -263,8 +262,7 @@
     }
 
     function slotDisabled(sl) {
-      // 「現在の予約枠」は満席表示でも選べるようにする（メモだけ変更したい時に詰まないため）
-      if (isCurrentSlot(sl)) return false;
+      // 縲檎樟蝨ｨ縺ｮ莠育ｴ・棧縲阪・貅蟶ｭ陦ｨ遉ｺ縺ｧ繧る∈縺ｹ繧九ｈ縺・↓縺吶ｋ・医Γ繝｢縺縺大､画峩縺励◆縺・凾縺ｫ隧ｰ縺ｾ縺ｪ縺・◆繧・ｼ・      if (isCurrentSlot(sl)) return false;
 
       const pref = $seatPref.value;
       const p = totalPeople();
@@ -286,9 +284,9 @@
       else if (pref === "table") ok = canTable(p, sl);
       else ok = canEither(p, sl);
 
-      if (pref === "zashiki" && !sl.zashikiEnabled) return `${sl.time}（座敷：受付停止）`;
-      if (isCurrentSlot(sl)) return `${sl.time}（現在の予約）`;
-      return `${sl.time}（${ok ? "予約可" : "満席"}）`;
+      if (pref === "zashiki" && !sl.zashikiEnabled) return `${sl.time}・亥ｺｧ謨ｷ・壼女莉伜●豁｢・荏;
+      if (isCurrentSlot(sl)) return `${sl.time}・育樟蝨ｨ縺ｮ莠育ｴ・ｼ荏;
+      return `${sl.time}・・{ok ? "莠育ｴ・庄" : "貅蟶ｭ"}・荏;
     }
 
     function renderTimes() {
@@ -296,13 +294,13 @@
 
       if (!availability) {
         const opt = document.createElement("option");
-        opt.textContent = "読み込み中…";
+        opt.textContent = "隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ窶ｦ";
         $time.appendChild(opt);
         return;
       }
 
       if (availability.closed) {
-        $timeHelp.textContent = availability.reason || "休業日のため予約できません。";
+        $timeHelp.textContent = availability.reason || "莨第･ｭ譌･縺ｮ縺溘ａ莠育ｴ・〒縺阪∪縺帙ｓ縲・;
         $update.disabled = true;
         $time.disabled = true;
         return;
@@ -322,22 +320,21 @@
       }
 
       if (enabledCount === 0) {
-        $timeHelp.textContent = "この条件では満席です。日付・人数・席希望を変えてください。";
+        $timeHelp.textContent = "縺薙・譚｡莉ｶ縺ｧ縺ｯ貅蟶ｭ縺ｧ縺吶よ律莉倥・莠ｺ謨ｰ繝ｻ蟶ｭ蟶梧悍繧貞､峨∴縺ｦ縺上□縺輔＞縲・;
         $update.disabled = true;
       } else {
         $timeHelp.textContent = "";
 
-        // 締切ロック中は常に更新不可
+        // 邱蛻・Ο繝・け荳ｭ縺ｯ蟶ｸ縺ｫ譖ｴ譁ｰ荳榊庄
         $update.disabled = deadlineLocked;
 
-        // 既存の予約時刻を優先
-        const cur = currentReservation?.time;
+        // 譌｢蟄倥・莠育ｴ・凾蛻ｻ繧貞━蜈・        const cur = currentReservation?.time;
         if (cur) {
           const curOpt = [...$time.options].find(o => o.value === cur);
           if (curOpt) $time.value = cur;
         }
 
-        // 選択中の値が無効なら最初の有効枠へ
+        // 驕ｸ謚樔ｸｭ縺ｮ蛟､縺檎┌蜉ｹ縺ｪ繧画怙蛻昴・譛牙柑譫縺ｸ
         const curOpt2 = [...$time.options].find(o => o.value === $time.value);
         if (!curOpt2 || curOpt2.disabled) {
           const firstEnabled = [...$time.options].find(o => !o.disabled);
@@ -350,14 +347,14 @@
       const ymd = $date.value;
 
       if (isWeekendYmd(ymd)) {
-        alert("土日は休みです。平日を選んでください。");
+        alert("蝨滓律縺ｯ莨代∩縺ｧ縺吶ょｹｳ譌･繧帝∈繧薙〒縺上□縺輔＞縲・);
         const fixed = nextWeekdayYmd(ymd);
         if (fp) fp.setDate(fixed, true);
         else $date.value = fixed;
         return;
       }
 
-      $timeHelp.textContent = "読み込み中…";
+      $timeHelp.textContent = "隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ窶ｦ";
       $update.disabled = true;
       availability = null;
       renderTimes();
@@ -368,7 +365,7 @@
       } catch (e) {
         console.error(e);
         availability = null;
-        $timeHelp.textContent = "空席状況の取得に失敗しました。";
+        $timeHelp.textContent = "遨ｺ蟶ｭ迥ｶ豕√・蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆縲・;
         $update.disabled = true;
         renderTimes();
       }
@@ -378,8 +375,7 @@
       const raw = ($rid.value || "").trim();
       const phone = normalizePhone($phone.value);
 
-      // 数字4〜6桁は「予約番号（code）」として扱う。それ以外は「旧ID」として扱う。
-      const isCode = /^\d{4,6}$/.test(raw);
+      // 謨ｰ蟄・縲・譯√・縲御ｺ育ｴ・分蜿ｷ・・ode・峨阪→縺励※謇ｱ縺・ゅ◎繧御ｻ･螟悶・縲梧立ID縲阪→縺励※謇ｱ縺・・      const isCode = /^\d{4,6}$/.test(raw);
 
       if (isCode) return { code: raw, phone };
       return { id: raw, phone };
@@ -387,12 +383,12 @@
 
     async function lookup() {
       $lookup.disabled = true;
-      $lookup.textContent = "読み込み中…";
+      $lookup.textContent = "隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ窶ｦ";
 
       try {
         const bodyObj = buildLookupBody();
         if ((!bodyObj.code && !bodyObj.id) || !bodyObj.phone) {
-          alert("予約番号と電話番号を入力してください。");
+          alert("莠育ｴ・分蜿ｷ縺ｨ髮ｻ隧ｱ逡ｪ蜿ｷ繧貞・蜉帙＠縺ｦ縺上□縺輔＞縲・);
           return;
         }
 
@@ -406,13 +402,12 @@
         $detail.style.display = "";
         $statusBox.textContent = statusText(r);
 
-        // 値反映
+        // 蛟､蜿肴丐
         if (fp) fp.setDate(r.date, false);
         $date.value = r.date;
 
         $seatPref.value = r.seatPref || "either";
-        // 大人/子供（新） → 無ければ people（旧）で復元
-        const aRaw = (r && (r.adults ?? r.adult ?? r.adultCount));
+        // 螟ｧ莠ｺ/蟄蝉ｾ幢ｼ域眠・・竊・辟｡縺代ｌ縺ｰ people・域立・峨〒蠕ｩ蜈・        const aRaw = (r && (r.adults ?? r.adult ?? r.adultCount));
         const cRaw = (r && (r.children ?? r.child ?? r.childCount));
 
         const aNum = Number(aRaw);
@@ -428,10 +423,9 @@
         clampPeopleInputs();
         $note.value = r.note || "";
 
-        // 変更期限（2日前）判定：元の予約日基準
-        deadlineLocked = !canChange(r.date);
+        // 螟画峩譛滄剞・・譌･蜑搾ｼ牙愛螳夲ｼ壼・縺ｮ莠育ｴ・律蝓ｺ貅・        deadlineLocked = !canChange(r.date);
         if (deadlineLocked) {
-          $statusBox.textContent += " / ※ 変更期限（2日前）を過ぎています。";
+          $statusBox.textContent += " / 窶ｻ 螟画峩譛滄剞・・譌･蜑搾ｼ峨ｒ驕弱℃縺ｦ縺・∪縺吶・;
           setEditable(false);
         } else {
           setEditable(true);
@@ -439,16 +433,15 @@
 
         await loadAvailability();
 
-        // 時刻の既定値（予約時刻を優先）
-        if (r.time) $time.value = r.time;
+        // 譎ょ綾縺ｮ譌｢螳壼､・井ｺ育ｴ・凾蛻ｻ繧貞━蜈茨ｼ・        if (r.time) $time.value = r.time;
         renderTimes();
 
       } catch (e) {
         console.error(e);
-        alert(e.message || "見つかりませんでした");
+        alert(e.message || "隕九▽縺九ｊ縺ｾ縺帙ｓ縺ｧ縺励◆");
       } finally {
         $lookup.disabled = false;
-        $lookup.textContent = "確認";
+        $lookup.textContent = "遒ｺ隱・;
       }
     }
 
@@ -463,22 +456,22 @@
       if (!currentReservation) return;
 
       if (deadlineLocked) {
-        alert("変更期限（2日前）を過ぎています。キャンセルはお電話でお願いします。");
+        alert("螟画峩譛滄剞・・譌･蜑搾ｼ峨ｒ驕弱℃縺ｦ縺・∪縺吶ゅく繝｣繝ｳ繧ｻ繝ｫ縺ｯ縺企崕隧ｱ縺ｧ縺企｡倥＞縺励∪縺吶・);
         return;
       }
       if (isWeekendYmd($date.value)) {
-        alert("土日は休みです。平日を選んでください。");
+        alert("蝨滓律縺ｯ莨代∩縺ｧ縺吶ょｹｳ譌･繧帝∈繧薙〒縺上□縺輔＞縲・);
         return;
       }
 
-      if (!$date.value) { alert("日付を選んでください。"); return; }
-      if (!$time.value) { alert("時間を選んでください。"); return; }
+      if (!$date.value) { alert("譌･莉倥ｒ驕ｸ繧薙〒縺上□縺輔＞縲・); return; }
+      if (!$time.value) { alert("譎る俣繧帝∈繧薙〒縺上□縺輔＞縲・); return; }
       const pc = clampPeopleInputs();
-      if (pc.adults < 1) { alert("大人は1以上で入力してください。"); return; }
-      if (pc.children < 0) { alert("子供は0以上で入力してください。"); return; }
+      if (pc.adults < 1) { alert("螟ｧ莠ｺ縺ｯ1莉･荳翫〒蜈･蜉帙＠縺ｦ縺上□縺輔＞縲・); return; }
+      if (pc.children < 0) { alert("蟄蝉ｾ帙・0莉･荳翫〒蜈･蜉帙＠縺ｦ縺上□縺輔＞縲・); return; }
 
       $update.disabled = true;
-      $update.textContent = "送信中…";
+      $update.textContent = "騾∽ｿ｡荳ｭ窶ｦ";
 
       try {
         await Hidakko.api(`/reservations/${encodeURIComponent(currentReservation.id)}`, {
@@ -496,18 +489,18 @@
           })
         });
 
-        alert("変更を受け付けました。再承認となります。");
+        alert("螟画峩繧貞女縺台ｻ倥￠縺ｾ縺励◆縲ょ・謇ｿ隱阪→縺ｪ繧翫∪縺吶・);
         await lookup();
       } catch (e) {
         console.error(e);
-        alert(e.message || "変更に失敗しました");
+        alert(e.message || "螟画峩縺ｫ螟ｱ謨励＠縺ｾ縺励◆");
       } finally {
-        $update.textContent = "変更を送信（再承認）";
+        $update.textContent = "螟画峩繧帝∽ｿ｡・亥・謇ｿ隱搾ｼ・;
         $update.disabled = deadlineLocked;
       }
     });
 
-    // ====== flatpickr 初期化（土日無効）======
+    // ====== flatpickr 蛻晄悄蛹厄ｼ亥悄譌･辟｡蜉ｹ・・=====
     (function initDatePicker(){
       const today = jstTodayYmd();
       const initial = isWeekendYmd(today) ? nextWeekdayYmd(today) : today;
@@ -518,14 +511,12 @@
         minDate: "today",
         disable: [ function(date){ return isWeekendDateObj(date); } ],
         onChange: function() {
-          if ($detail.style.display === "none") return; // 予約を開く前は何もしない
-          loadAvailability();
+          if ($detail.style.display === "none") return; // 莠育ｴ・ｒ髢九￥蜑阪・菴輔ｂ縺励↑縺・          loadAvailability();
         }
       });
     })();
 
-    // done.html から #code= で飛んでくる場合（旧 #id= も救う）
-    (function initHash(){
+    // done.html 縺九ｉ #code= 縺ｧ鬟帙ｓ縺ｧ縺上ｋ蝣ｴ蜷茨ｼ域立 #id= 繧よ舞縺・ｼ・    (function initHash(){
       const hash = location.hash || "";
       if (hash.startsWith("#code=")) {
         $rid.value = decodeURIComponent(hash.slice(6));
@@ -536,3 +527,4 @@
   </script>
 </body>
 </html>
+
