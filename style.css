@@ -318,3 +318,12 @@ a.btn.primary{
   line-height: 1.6;
   resize: vertical;
 }
+
+/* 備考（textarea）がスマホで潰れない対策 */
+#note{
+  min-height: 120px;
+  height: auto;
+  line-height: 1.6;
+  resize: vertical;
+}
+
