@@ -327,3 +327,13 @@ a.btn.primary{
   resize: vertical;
 }
 
+
+/* IOS_FORM_FIX_20260206 */
+@media (max-width: 560px){
+  /* 席の希望・時間（select）が潰れる対策 */
+  select{ min-height:44px; height:44px; }
+
+  /* 備考（textarea）が潰れる対策 */
+  textarea{ min-height:120px; height:auto; line-height:1.6; }
+  #note{ min-height:120px; }
+}
