@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /* style.css (mobile-first, overflow-safe) */
 
 :root{
@@ -319,7 +320,7 @@ a.btn.primary{
   resize: vertical;
 }
 
-/* ”õlitextareaj‚ªƒXƒ}ƒz‚Å’×‚ê‚È‚¢‘Îô */
+/* ï¿½ï¿½ï¿½lï¿½itextareaï¿½jï¿½ï¿½ï¿½Xï¿½}ï¿½zï¿½Å’×‚ï¿½È‚ï¿½ï¿½Îï¿½ */
 #note{
   min-height: 120px;
   height: auto;
@@ -339,11 +340,11 @@ a.btn.primary{
 }
 /* IOS_SELECT_TEXT_FIX_20260206 */
 @media (max-width: 560px){
-  /* iOS Safari‚Åselect‚Ì•¶š‚ªÁ‚¦‚é‚Ì‚ğ–h‚® */
+  /* iOS Safariï¿½ï¿½selectï¿½Ì•ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì‚ï¿½hï¿½ï¿½ */
   select{
     min-height:44px;
     height:44px;
-    padding:0 12px;                 /* ©‚±‚±‚ªd—vicpadding‚ğÁ‚·j */
+    padding:0 12px;                 /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½dï¿½vï¿½iï¿½cpaddingï¿½ï¿½ï¿½ï¿½ï¿½ï¿½j */
     color: var(--text) !important;
     -webkit-text-fill-color: var(--text) !important;
     background:#fff;
@@ -351,5 +352,5 @@ a.btn.primary{
   select option{ color: var(--text); }
 }
 
-/* ƒtƒH[ƒ€‚ÌŒ©‚½–Ú‚ğƒ‰ƒCƒgŠî€‚ÉŒÅ’èiiOSƒ_[ƒNƒ‚[ƒh‚Å•¶š‚ªÁ‚¦‚é‘Îôj */
+/* ï¿½tï¿½Hï¿½[ï¿½ï¿½ï¿½ÌŒï¿½ï¿½ï¿½ï¿½Ú‚ï¿½ï¿½ï¿½Cï¿½gï¿½î€ï¿½ÉŒÅ’ï¿½iiOSï¿½_ï¿½[ï¿½Nï¿½ï¿½ï¿½[ï¿½hï¿½Å•ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îï¿½j */
 :root{ color-scheme: light; }
