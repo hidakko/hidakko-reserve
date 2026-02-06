@@ -11,7 +11,15 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <style>
     .flatpickr-calendar{ border-radius:16px; box-shadow: 0 12px 30px rgba(0,0,0,.15); }
-  </style>
+    .peopleSplit{ display:flex; gap:12px; flex-wrap:wrap; width:100%; }
+    .peopleBox{ flex:1 1 140px; min-width:140px; display:flex; flex-direction:column; gap:6px; }
+    .peopleBox label{ font-weight:800; color:#6b7280; font-size:13px; }
+    .peopleBox input{ width:100%; }
+      @media (max-width: 480px){
+      .peopleSplit{ flex-direction: column; }
+      .peopleBox{ min-width: 0; }
+    }
+</style>
 </head>
 <body>
   <header class="topbar">
@@ -48,7 +56,7 @@
 
       <div class="row">
         <label for="date">日付</label>
-        <input id="date" type="text" placeholder="日付を選択" />
+        <input id="date" type="text" placeholder="日付を選択" required />
       </div>
 
       <div class="row">
@@ -63,13 +71,22 @@
 
       <div class="row">
         <label>時間</label>
-        <select id="time"></select>
+        <select id="time" required></select>
         <small id="timeHelp" class="muted"></small>
       </div>
 
-      <div class="row">
+            <div class="row">
         <label>人数</label>
-        <input id="people" type="number" min="1" max="20" />
+        <div class="peopleSplit">
+          <div class="peopleBox">
+            <label for="adult">大人</label>
+            <input id="adult" type="number" min="1" max="20" required />
+          </div>
+          <div class="peopleBox">
+            <label for="child">子供</label>
+            <input id="child" type="number" min="0" max="20" required />
+          </div>
+        </div>
       </div>
 
       <div class="row">
@@ -104,7 +121,8 @@
     const $seatPref = document.getElementById("seatPref");
     const $time = document.getElementById("time");
     const $timeHelp = document.getElementById("timeHelp");
-    const $people = document.getElementById("people");
+    const $adult = document.getElementById("adult");
+    const $child = document.getElementById("child");
     const $note = document.getElementById("note");
     const $update = document.getElementById("update");
 
@@ -115,6 +133,26 @@
 
     function normalizePhone(s) {
       return String(s || "").replace(/[^\d]/g, "");
+    }
+    function nInt(v, fallback=0) {
+      const x = Number.parseInt(String(v ?? "").trim(), 10);
+      return Number.isFinite(x) ? x : fallback;
+    }
+    function clampPeopleInputs() {
+      let a = nInt($adult.value, 1);
+      let c = nInt($child.value, 0);
+
+      a = Math.max(1, Math.min(20, a));
+      c = Math.max(0, Math.min(20, c));
+
+      if (a + c > 20) c = Math.max(0, 20 - a);
+
+      $adult.value = String(a);
+      $child.value = String(c);
+      return { adults: a, children: c, total: a + c };
+    }
+    function totalPeople() {
+      return clampPeopleInputs().total;
     }
     function jstTodayYmd() {
       const nowJst = new Date(Date.now() + 9*60*60*1000);
@@ -154,7 +192,8 @@
       $date.disabled = !enabled;
       $seatPref.disabled = !enabled;
       $time.disabled = !enabled;
-      $people.disabled = !enabled;
+      $adult.disabled = !enabled;
+       $child.disabled = !enabled;
       $note.disabled = !enabled;
       $update.disabled = !enabled;
       if (!enabled) $update.title = "変更は2日前まで可能です";
@@ -228,7 +267,7 @@
       if (isCurrentSlot(sl)) return false;
 
       const pref = $seatPref.value;
-      const p = Number($people.value || 1);
+      const p = totalPeople();
 
       if (pref === "counter") return !canCounter(sl);
       if (pref === "zashiki") return !canZashiki(sl);
@@ -238,7 +277,7 @@
 
     function slotLabel(sl) {
       const pref = $seatPref.value;
-      const p = Number($people.value || 1);
+      const p = totalPeople();
 
       let ok = false;
       if (isCurrentSlot(sl)) ok = true;
@@ -372,7 +411,21 @@
         $date.value = r.date;
 
         $seatPref.value = r.seatPref || "either";
-        $people.value = r.people || 2;
+        // 大人/子供（新） → 無ければ people（旧）で復元
+        const aRaw = (r && (r.adults ?? r.adult ?? r.adultCount));
+        const cRaw = (r && (r.children ?? r.child ?? r.childCount));
+
+        const aNum = Number(aRaw);
+        const cNum = Number(cRaw);
+
+        if (Number.isFinite(aNum) || Number.isFinite(cNum)) {
+          $adult.value = String(Math.max(1, Number.isFinite(aNum) ? aNum : (Number(r.people || 1) || 1)));
+          $child.value = String(Math.max(0, Number.isFinite(cNum) ? cNum : 0));
+        } else {
+          $adult.value = String(Math.max(1, Number(r.people || 2) || 2));
+          $child.value = "0";
+        }
+        clampPeopleInputs();
         $note.value = r.note || "";
 
         // 変更期限（2日前）判定：元の予約日基準
@@ -401,8 +454,10 @@
 
     $lookup.addEventListener("click", lookup);
     $seatPref.addEventListener("change", renderTimes);
-    $people.addEventListener("input", renderTimes);
-    $people.addEventListener("change", renderTimes);
+    $adult.addEventListener("input", () => { clampPeopleInputs(); renderTimes(); });
+    $child.addEventListener("input", () => { clampPeopleInputs(); renderTimes(); });
+    $adult.addEventListener("change", () => { clampPeopleInputs(); renderTimes(); });
+    $child.addEventListener("change", () => { clampPeopleInputs(); renderTimes(); });
 
     $update.addEventListener("click", async () => {
       if (!currentReservation) return;
@@ -416,6 +471,12 @@
         return;
       }
 
+      if (!$date.value) { alert("日付を選んでください。"); return; }
+      if (!$time.value) { alert("時間を選んでください。"); return; }
+      const pc = clampPeopleInputs();
+      if (pc.adults < 1) { alert("大人は1以上で入力してください。"); return; }
+      if (pc.children < 0) { alert("子供は0以上で入力してください。"); return; }
+
       $update.disabled = true;
       $update.textContent = "送信中…";
 
@@ -427,7 +488,9 @@
             phone: normalizePhone($phone.value),
             date: $date.value,
             time: $time.value,
-            people: Number($people.value || 1),
+            people: totalPeople(),
+            adults: clampPeopleInputs().adults,
+            children: clampPeopleInputs().children,
             seatPref: $seatPref.value,
             note: $note.value
           })

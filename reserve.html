@@ -11,7 +11,15 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <style>
     .flatpickr-calendar{ border-radius:16px; box-shadow: 0 12px 30px rgba(0,0,0,.15); }
-  </style>
+    .peopleSplit{ display:flex; gap:12px; flex-wrap:wrap; width:100%; }
+    .peopleBox{ flex:1 1 140px; min-width:140px; display:flex; flex-direction:column; gap:6px; }
+    .peopleBox label{ font-weight:800; color:#6b7280; font-size:13px; }
+    .peopleBox input{ width:100%; }
+      @media (max-width: 480px){
+      .peopleSplit{ flex-direction: column; }
+      .peopleBox{ min-width: 0; }
+    }
+</style>
 </head>
 <body>
   <header class="topbar">
@@ -24,7 +32,7 @@
     <section class="card">
       <div class="row">
         <label for="date">日付</label>
-        <input id="date" type="text" placeholder="日付を選択" />
+        <input id="date" type="text" placeholder="日付を選択" required />
       </div>
 
       <div class="row">
@@ -39,23 +47,32 @@
 
       <div class="row">
         <label>時間</label>
-        <select id="time"></select>
+        <select id="time" required></select>
         <small id="timeHelp" class="muted"></small>
       </div>
 
-      <div class="row">
+            <div class="row">
         <label>人数</label>
-        <input id="people" type="number" min="1" max="20" value="2" />
+        <div class="peopleSplit">
+          <div class="peopleBox">
+            <label for="adult">大人</label>
+            <input id="adult" type="number" min="1" max="20" value="2" required />
+          </div>
+          <div class="peopleBox">
+            <label for="child">子供</label>
+            <input id="child" type="number" min="0" max="20" value="0" required />
+          </div>
+        </div>
       </div>
 
       <div class="row">
         <label>お名前</label>
-        <input id="name" type="text" placeholder="例：山田 太郎" />
+        <input id="name" type="text" placeholder="例：山田 太郎" required />
       </div>
 
       <div class="row">
         <label>電話番号</label>
-        <input id="phone" type="tel" placeholder="例：09012345678（ハイフン可）" />
+        <input id="phone" type="tel" placeholder="例：09012345678（ハイフン可）" required />
       </div>
 
       <div class="row">
@@ -84,7 +101,8 @@
     const $seatPref = document.getElementById("seatPref");
     const $time = document.getElementById("time");
     const $timeHelp = document.getElementById("timeHelp");
-    const $people = document.getElementById("people");
+    const $adult = document.getElementById("adult");
+    const $child = document.getElementById("child");
     const $name = document.getElementById("name");
     const $phone = document.getElementById("phone");
     const $note = document.getElementById("note");
@@ -95,6 +113,27 @@
 
     function normalizePhone(s) {
       return String(s || "").replace(/[^\d]/g, "");
+    }
+    function nInt(v, fallback=0) {
+      const x = Number.parseInt(String(v ?? "").trim(), 10);
+      return Number.isFinite(x) ? x : fallback;
+    }
+    function clampPeopleInputs() {
+      let a = nInt($adult.value, 1);
+      let c = nInt($child.value, 0);
+
+      a = Math.max(1, Math.min(20, a));
+      c = Math.max(0, Math.min(20, c));
+
+      // 合計は 20 まで（旧 people と互換）
+      if (a + c > 20) c = Math.max(0, 20 - a);
+
+      $adult.value = String(a);
+      $child.value = String(c);
+      return { adults: a, children: c, total: a + c };
+    }
+    function totalPeople() {
+      return clampPeopleInputs().total;
     }
     function jstTodayYmd() {
       const nowJst = new Date(Date.now() + 9*60*60*1000);
@@ -162,7 +201,7 @@
     }
     function slotDisabled(sl) {
       const pref = $seatPref.value;
-      const p = Number($people.value || 1);
+      const p = totalPeople();
 
       if (pref === "counter") return !canCounter(sl);
       if (pref === "zashiki") return !canZashiki(sl);
@@ -171,7 +210,7 @@
     }
     function slotLabel(sl) {
       const pref = $seatPref.value;
-      const p = Number($people.value || 1);
+      const p = totalPeople();
 
       let ok = false;
       if (pref === "counter") ok = canCounter(sl);
@@ -257,14 +296,24 @@
     }
 
     $seatPref.addEventListener("change", renderTimes);
-    $people.addEventListener("input", renderTimes);
-    $people.addEventListener("change", renderTimes);
+    $adult.addEventListener("input", () => { clampPeopleInputs(); renderTimes(); });
+    $child.addEventListener("input", () => { clampPeopleInputs(); renderTimes(); });
+    $adult.addEventListener("change", () => { clampPeopleInputs(); renderTimes(); });
+    $child.addEventListener("change", () => { clampPeopleInputs(); renderTimes(); });
 
     $submit.addEventListener("click", async () => {
       if (isWeekendYmd($date.value)) {
         alert("土日は休みです。平日を選んでください。");
         return;
       }
+
+      if (!$date.value) { alert("日付を選んでください。"); return; }
+      if (!$time.value) { alert("時間を選んでください。"); return; }
+
+      const pc = clampPeopleInputs();
+      if (pc.adults < 1) { alert("大人は1以上で入力してください。"); return; }
+      if (pc.children < 0) { alert("子供は0以上で入力してください。"); return; }
+      if (pc.total < 1) { alert("人数を入力してください。"); return; }
 
       const nm = ($name.value || "").trim();
       const ph = normalizePhone($phone.value);
@@ -308,7 +357,9 @@
         const payload = {
           date: $date.value,
           time: $time.value,
-          people: Number($people.value || 1),
+          people: totalPeople(),
+          adults: clampPeopleInputs().adults,
+          children: clampPeopleInputs().children,
           seatPref: $seatPref.value,
           name: nm,
           phone: $phone.value, // サーバ側で正規化される。表示用に入力値もOK

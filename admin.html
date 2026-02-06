@@ -254,6 +254,25 @@
       return "どちらでも";
     }
 
+    function peopleBadge(r) {
+      const p = Number(r?.people);
+      const aRaw = (r && (r.adults ?? r.adult ?? r.adultCount));
+      const cRaw = (r && (r.children ?? r.child ?? r.childCount));
+      const a = Number(aRaw);
+      const c = Number(cRaw);
+
+      // 新データ（大人/子供）があれば優先表示。無ければ旧 people のみ。
+      if (Number.isFinite(a) || Number.isFinite(c)) {
+        const adults = Number.isFinite(a) ? Math.max(1, a) : Math.max(1, (Number.isFinite(p) && p > 0) ? p : 1);
+        const children = Number.isFinite(c) ? Math.max(0, c) : 0;
+        const total = (Number.isFinite(p) && p > 0) ? p : (adults + children);
+        return `（${total}名：大人${adults} 子供${children}）`;
+      }
+
+      const total = (Number.isFinite(p) && p > 0) ? p : 0;
+      return `（${total}名）`;
+    }
+
     // ===== 土日チェック =====
     function isWeekendYmd(ymd) {
       if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return false;
@@ -410,7 +429,7 @@
       $pending.innerHTML = list.map(r => `
         <div class="slot">
           <div>
-            <div class="slot-time">${r.time} / ${escapeHtml(r.name)}（${r.people}名）</div>
+            <div class="slot-time">${r.time} / ${escapeHtml(r.name)}${peopleBadge(r)}</div>
             <div class="muted">希望：${seatPrefLabel(r.seatPref)} / 電話：${escapeHtml(r.phone)}</div>
             ${r.note ? `<div class="muted">備考：${escapeHtml(r.note)}</div>` : ``}
 
